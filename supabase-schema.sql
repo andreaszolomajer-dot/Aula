@@ -39,3 +39,30 @@ create table if not exists room_hosts (
   host_name text,
   claimed_at timestamptz default now()
 );
+
+-- Mod sală (sală de așteptare / webinar) + cererile din sala de așteptare
+alter table room_hosts add column if not exists lobby boolean default false;
+alter table room_hosts add column if not exists webinar boolean default false;
+
+create table if not exists lobby_requests (
+  room text,
+  identity text,
+  name text,
+  admitted boolean default false,
+  requested_at timestamptz default now(),
+  primary key (room, identity)
+);
+
+-- Marcaje pentru remindere (ca să nu se trimită de două ori)
+alter table meetings add column if not exists reminded_24h boolean default false;
+alter table meetings add column if not exists reminded_1h boolean default false;
+
+-- Contacte (lista personală de emailuri a fiecărui utilizator)
+create table if not exists contacts (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid,
+  email text not null,
+  name text,
+  created_at timestamptz default now(),
+  unique (user_id, email)
+);

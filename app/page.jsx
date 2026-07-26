@@ -4,43 +4,34 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from './components/AuthProvider';
+import { useT } from './components/LangProvider';
+import LangSwitch from './components/LangSwitch';
 
 export default function Home() {
   const [name, setName] = useState('');
   const [room, setRoom] = useState('');
   const router = useRouter();
   const { user, configured, signOut } = useAuth();
+  const { t } = useT();
 
   const join = () => {
     if (!name.trim() || !room.trim()) return;
-    router.push(
-      `/room/${encodeURIComponent(room.trim())}?username=${encodeURIComponent(name.trim())}`
-    );
+    router.push(`/room/${encodeURIComponent(room.trim())}?username=${encodeURIComponent(name.trim())}`);
   };
-
-  const onKey = (e) => {
-    if (e.key === 'Enter') join();
-  };
-
-  const newRoom = () => {
-    const id = Math.random().toString(36).slice(2, 8);
-    setRoom(id);
-  };
+  const onKey = (e) => { if (e.key === 'Enter') join(); };
+  const newRoom = () => setRoom(Math.random().toString(36).slice(2, 8));
 
   return (
     <div className="landing">
-      {configured && (
-        <div className="acct-chip">
-          {user ? (
-            <>
-              <span>{user.email}</span>
-              <button onClick={signOut}>Ieși</button>
-            </>
-          ) : (
-            <Link href="/login">Conectează-te</Link>
-          )}
-        </div>
-      )}
+      <div className="topbar-utils">
+        <LangSwitch />
+        {configured && (
+          <div className="acct-chip">
+            {user ? (<><span>{user.email}</span><button onClick={signOut}>{t('logout')}</button></>) : (<Link href="/login">{t('login')}</Link>)}
+          </div>
+        )}
+      </div>
+
       <div className="brand">
         <span className="dot">
           <svg viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.4">
@@ -49,59 +40,30 @@ export default function Home() {
         </span>
         Aula
       </div>
-      <p className="tagline">Întâlniri video, chat și conferințe. Gratuit.</p>
+      <p className="tagline">{t('tagline')}</p>
 
       <div className="card">
-        <label>Numele tău</label>
-        <input
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          onKeyDown={onKey}
-          placeholder="ex. Andrei"
-        />
+        <label>{t('yourName')}</label>
+        <input value={name} onChange={(e) => setName(e.target.value)} onKeyDown={onKey} placeholder={t('exName')} />
 
-        <label>Numele sălii</label>
-        <input
-          value={room}
-          onChange={(e) => setRoom(e.target.value)}
-          onKeyDown={onKey}
-          placeholder="ex. sedinta-produs"
-        />
+        <label>{t('roomName')}</label>
+        <input value={room} onChange={(e) => setRoom(e.target.value)} onKeyDown={onKey} placeholder={t('exRoom')} />
 
-        <button onClick={join} disabled={!name.trim() || !room.trim()}>
-          Intră în ședință
-        </button>
-        <button
-          onClick={newRoom}
-          style={{
-            background: 'var(--accent-soft)',
-            color: 'var(--accent)',
-            marginTop: 0,
-          }}
-        >
-          Generează o sală nouă
-        </button>
+        <button onClick={join} disabled={!name.trim() || !room.trim()}>{t('join')}</button>
+        <button onClick={newRoom} style={{ background: 'var(--accent-soft)', color: 'var(--accent)', marginTop: 0 }}>{t('newRoom')}</button>
       </div>
 
-      <div className="foot" style={{ display: 'flex', gap: 18 }}>
-        <Link href="/schedule" style={{ color: 'var(--accent)' }}>
-          📅 Programează o ședință
-        </Link>
-        <Link href="/meetings" style={{ color: 'var(--muted)' }}>
-          Ședințele mele
-        </Link>
-        <Link href="/slides" style={{ color: 'var(--muted)' }}>
-          Prezentări
-        </Link>
+      <div className="foot" style={{ display: 'flex', gap: 18, flexWrap: 'wrap', justifyContent: 'center' }}>
+        <Link href="/schedule" style={{ color: 'var(--accent)' }}>{t('navSchedule')}</Link>
+        <Link href="/meetings" style={{ color: 'var(--muted)' }}>{t('navMeetings')}</Link>
+        <Link href="/slides" style={{ color: 'var(--muted)' }}>{t('navSlides')}</Link>
+        <Link href="/contacte" style={{ color: 'var(--muted)' }}>{t('navContacts')}</Link>
       </div>
-      <p className="foot" style={{ marginTop: 10 }}>
-        Oricine intră cu <b>același nume de sală</b> se vede și se aude în timp real.
-      </p>
+      <p className="foot" style={{ marginTop: 10 }}>{t('sameRoomNote')}</p>
       <p className="foot" style={{ marginTop: 6, fontSize: 11.5 }}>
-        Prin intrarea în ședință accepți{' '}
-        <Link href="/confidentialitate" style={{ color: 'var(--muted)' }}>Politica de confidențialitate</Link>{' '}
-        și{' '}
-        <Link href="/termeni" style={{ color: 'var(--muted)' }}>Termenii</Link>.
+        {t('acceptLegal')}{' '}
+        <Link href="/confidentialitate" style={{ color: 'var(--muted)' }}>{t('privacyPolicy')}</Link>{' '}
+        <Link href="/termeni" style={{ color: 'var(--muted)' }}>{t('andTerms')}</Link>.
       </p>
     </div>
   );

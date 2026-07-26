@@ -669,3 +669,169 @@ html, body {
 }
 .hc-row .hc-remove { color: var(--danger, #F2555A); }
 .hc-row button:hover { border-color: var(--accent); }
+
+/* ============ BARĂ UNIFICATĂ (DOCK) + PANOURI ============ */
+.dock-btn {
+  position: fixed; left: 16px; bottom: 90px; z-index: 47;
+  background: var(--accent); color: #fff; border: none; border-radius: 99px;
+  padding: 10px 16px; font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: 13px;
+  cursor: pointer; box-shadow: 0 6px 20px rgba(109,116,240,0.4);
+}
+.dock-btn.active { background: var(--surface-2); color: var(--text); border: 1px solid var(--border); box-shadow: none; }
+.dock-strip {
+  position: fixed; left: 16px; bottom: 134px; z-index: 47;
+  display: flex; flex-direction: column; gap: 6px; max-height: 64vh; overflow-y: auto;
+  background: rgba(11,15,23,0.92); border: 1px solid var(--border); border-radius: 14px; padding: 8px; backdrop-filter: blur(8px);
+}
+.dock-item {
+  display: flex; align-items: center; gap: 9px; background: var(--surface-2); color: var(--text);
+  border: 1px solid var(--border); border-radius: 9px; padding: 8px 11px; font-family: inherit; font-size: 12.5px; cursor: pointer; width: 150px; text-align: left;
+}
+.dock-item:hover { border-color: var(--accent); }
+.dock-item.on { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+.dock-ic { width: 20px; text-align: center; font-size: 14px; flex-shrink: 0; }
+
+.panel-float {
+  position: fixed; top: 70px; z-index: 46; width: 262px; background: var(--surface);
+  border: 1px solid var(--border); border-radius: 14px; padding: 12px; display: flex; flex-direction: column; gap: 9px;
+  box-shadow: 0 16px 40px rgba(0,0,0,0.5); max-height: 76vh; overflow-y: auto;
+}
+.panel-left { left: 16px; }
+.panel-right { right: 16px; }
+.panel-head { display: flex; align-items: center; justify-content: space-between; font-weight: 600; font-size: 13.5px; }
+.panel-x { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 14px; }
+.panel-x:hover { color: var(--text); }
+
+/* Repoziționare subtitrare (fără wrapper cap-bar) */
+.cap-controls {
+  position: fixed; left: 50%; bottom: 200px; transform: translateX(-50%); z-index: 46;
+  display: flex; align-items: center; gap: 8px; background: rgba(11,15,23,0.92); border: 1px solid var(--border);
+  border-radius: 99px; padding: 6px 10px; backdrop-filter: blur(8px); flex-wrap: wrap; justify-content: center; max-width: 92vw;
+}
+.cap-close { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 13px; padding: 2px 6px; }
+.cap-close:hover { color: var(--text); }
+.cap-text {
+  position: fixed; left: 50%; bottom: 150px; transform: translateX(-50%); z-index: 40;
+  background: rgba(8,11,18,0.88); backdrop-filter: blur(10px); border: 1px solid var(--border);
+  border-radius: 12px; padding: 11px 17px; font-size: 15.5px; line-height: 1.4; text-align: center; max-width: 80vw;
+}
+.cap-text b { color: var(--mint); font-weight: 600; }
+.cap-text.err { color: var(--warm, #F5A742); font-size: 13.5px; }
+
+/* Reacții repoziționate (centru sus față de bară) */
+.rx-stack {
+  position: fixed; left: 50%; bottom: 252px; transform: translateX(-50%); z-index: 45;
+  display: flex; flex-direction: column; gap: 8px; align-items: center;
+}
+
+/* Text pe tablă */
+.wb-textin {
+  position: absolute; z-index: 5; background: rgba(255,255,255,0.92); border: 1px dashed #9aa; border-radius: 6px;
+  padding: 2px 6px; font-family: 'Inter', system-ui, sans-serif; font-weight: 600; outline: none; min-width: 90px;
+}
+
+/* Buton notițe subtitrare */
+.cap-notes {
+  background: var(--mint); color: #06231c; border: none; border-radius: 8px;
+  padding: 6px 11px; font-family: inherit; font-size: 12px; font-weight: 600; cursor: pointer;
+}
+.cap-notes:disabled { opacity: 0.4; cursor: default; background: var(--surface-2); color: var(--muted); }
+
+/* ============ Fișiere ============ */
+.fs-upload {
+  background: var(--accent); color: #fff; border: none; border-radius: 9px; padding: 10px;
+  font-family: inherit; font-weight: 600; font-size: 13px; cursor: pointer;
+}
+.fs-upload:hover { background: #7d84ff; }
+.fs-upload:disabled { opacity: 0.6; }
+.fs-item {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  background: var(--surface-2); border: 1px solid var(--border); border-radius: 9px; padding: 9px 11px;
+  text-decoration: none; color: var(--text);
+}
+.fs-item:hover { border-color: var(--accent); }
+.fs-name { font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fs-by { font-size: 11px; color: var(--muted); flex-shrink: 0; }
+
+/* ============ Q&A ============ */
+.qa-ask { display: flex; gap: 6px; }
+.qa-ask input {
+  flex: 1; background: var(--surface-2); border: 1px solid var(--border); border-radius: 8px;
+  padding: 9px 11px; color: var(--text); font-family: inherit; font-size: 13px; outline: none;
+}
+.qa-ask button { background: var(--accent); color: #fff; border: none; border-radius: 8px; padding: 0 13px; font-family: inherit; font-size: 12.5px; font-weight: 600; cursor: pointer; }
+.qa-item { display: flex; align-items: flex-start; gap: 8px; background: var(--surface-2); border: 1px solid var(--border); border-radius: 9px; padding: 9px; }
+.qa-item.done { opacity: 0.55; }
+.qa-vote { background: var(--surface-3); color: var(--accent); border: 1px solid var(--border); border-radius: 7px; padding: 5px 8px; font-size: 11.5px; cursor: pointer; flex-shrink: 0; font-family: inherit; }
+.qa-body { flex: 1; min-width: 0; }
+.qa-text { font-size: 13.5px; line-height: 1.35; }
+.qa-meta { font-size: 11px; color: var(--muted); margin-top: 2px; }
+.qa-done { background: none; border: 1px solid var(--border); color: var(--mint); border-radius: 7px; padding: 5px 8px; cursor: pointer; flex-shrink: 0; }
+
+/* ============ RESPONSIV — TELEFON ============ */
+@media (max-width: 640px) {
+  /* Panourile devin foaie de jos, pe toată lățimea */
+  .panel-float {
+    left: 8px; right: 8px; width: auto; top: auto; bottom: 150px; max-height: 56vh;
+  }
+  .pl-card { left: 8px; right: 8px; width: auto; top: auto; bottom: 150px; }
+
+  /* Bara de instrumente pe toată lățimea */
+  .dock-btn { bottom: 84px; left: 8px; padding: 9px 13px; font-size: 12.5px; }
+  .dock-strip {
+    left: 8px; right: 8px; bottom: 126px; flex-direction: row; flex-wrap: wrap; gap: 6px; max-height: 42vh;
+  }
+  .dock-item { width: auto; flex: 1 1 44%; justify-content: center; padding: 9px 8px; }
+
+  /* Subtitrare + reacții mai jos și mai mici */
+  .cap-controls { bottom: 150px; padding: 5px 8px; gap: 5px; }
+  .cap-controls select { font-size: 11px; padding: 4px 5px; }
+  .cap-text { bottom: 110px; font-size: 13.5px; padding: 9px 13px; max-width: 92vw; }
+  .rx-stack { bottom: 210px; }
+
+  /* Fundal virtual: grid mai mare */
+  .bg-grid { grid-template-columns: 1fr 1fr; }
+
+  /* Tabla: bara de unelte se împachetează */
+  .wb-stage { padding: 8px; }
+  .wb-toolbar { padding: 6px 8px; gap: 5px; }
+  .wb-color { width: 20px; height: 20px; }
+  .wb-tool { padding: 6px 8px; font-size: 11.5px; }
+
+  /* Prezentare live / înregistrare */
+  .rec-control { bottom: 84px; right: 8px; }
+  .lp-bar, .present-bar { bottom: 84px; }
+
+  /* Notificarea din ședință */
+  .room-notice { bottom: 150px; width: 94vw; }
+}
+
+/* Controale gazdă — moduri + așteptare */
+.hc-modes { display: flex; flex-direction: column; gap: 8px; }
+.hc-toggle { display: flex; gap: 9px; align-items: flex-start; font-size: 13px; color: var(--text); cursor: pointer; background: var(--surface-2); border: 1px solid var(--border); border-radius: 9px; padding: 9px 11px; }
+.hc-toggle input { margin-top: 3px; accent-color: var(--accent); flex-shrink: 0; }
+.hc-toggle small { color: var(--muted); font-weight: 400; }
+.hc-sub { font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--muted-2, #5D6b82); font-weight: 600; margin: 6px 0 2px; }
+.hc-wait { display: flex; flex-direction: column; gap: 6px; }
+.hc-admit { background: var(--mint); color: #06231c; border: none; border-radius: 7px; padding: 5px 11px; font-family: inherit; font-size: 12px; font-weight: 600; cursor: pointer; }
+
+/* Comutator de limbă */
+.topbar-utils { position: fixed; top: 14px; right: 16px; z-index: 20; display: flex; align-items: center; gap: 10px; }
+.topbar-utils .acct-chip { position: static; }
+.lang-switch { display: flex; gap: 3px; background: var(--surface); border: 1px solid var(--border); border-radius: 99px; padding: 3px; }
+.lang-switch button {
+  background: none; border: none; color: var(--muted); font-family: inherit; font-size: 11.5px;
+  padding: 4px 8px; border-radius: 99px; cursor: pointer;
+}
+.lang-switch button.on { background: var(--accent); color: #fff; }
+@media (max-width: 640px) {
+  .topbar-utils { flex-direction: column; align-items: flex-end; gap: 6px; }
+}
+
+/* Video YouTube sincronizat */
+.yt-frame {
+  width: min(94vw, 167vh); aspect-ratio: 16/9; overflow: hidden; border-radius: 10px;
+  box-shadow: 0 20px 70px rgba(0,0,0,0.6); background: #000;
+}
+.yt-frame > div, .yt-frame iframe { width: 100%; height: 100%; }
+@media (max-width: 640px) { .yt-frame { width: 96vw; } }

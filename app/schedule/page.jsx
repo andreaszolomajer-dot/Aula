@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { authedFetch } from '../../lib/api';
+import { useAuth } from '../components/AuthProvider';
 
 export default function Schedule() {
   const [form, setForm] = useState({
@@ -12,10 +13,33 @@ export default function Schedule() {
     duration: '30',
     hostName: '',
     invitees: '',
+    lobby: false,
+    webinar: false,
   });
   const [status, setStatus] = useState(null); // 'sending' | 'done' | 'error'
   const [result, setResult] = useState(null);
   const [copied, setCopied] = useState(false);
+  const { user } = useAuth();
+  const [contacts, setContacts] = useState([]);
+
+  useEffect(() => {
+    if (!user) return;
+    (async () => {
+      try {
+        const res = await authedFetch('/api/contacts');
+        const d = await res.json();
+        setContacts(d.contacts || []);
+      } catch (e) {}
+    })();
+  }, [user]);
+
+  const addContact = (cEmail) => {
+    setForm((f) => {
+      const list = f.invitees.split(/[\n,;]+/).map((x) => x.trim()).filter(Boolean);
+      if (list.includes(cEmail)) return f;
+      return { ...f, invitees: [...list, cEmail].join(', ') };
+    });
+  };
 
   const upd = (k) => (e) => setForm({ ...form, [k]: e.target.value });
 
@@ -100,6 +124,10 @@ export default function Schedule() {
             <option value="45">45 minute</option>
             <option value="60">1 oră</option>
             <option value="90">1 oră 30 min</option>
+            <option value="120">2 ore</option>
+            <option value="180">3 ore</option>
+            <option value="240">4 ore</option>
+            <option value="480">Toată ziua / fără limită</option>
           </select>
 
           <label>Numele tău (organizator)</label>
@@ -122,6 +150,36 @@ export default function Schedule() {
               resize: 'vertical',
             }}
           />
+
+          {contacts.length > 0 && (
+            <div style={{ marginTop: -4 }}>
+              <div style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 6 }}>Din contactele tale (clic pentru a adăuga):</div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, maxHeight: 96, overflowY: 'auto' }}>
+                {contacts.map((c) => (
+                  <button
+                    key={c.id}
+                    type="button"
+                    onClick={() => addContact(c.email)}
+                    style={{ background: 'var(--surface-2)', border: '1px solid var(--border)', borderRadius: 99, padding: '5px 11px', fontSize: 12, color: 'var(--text)', cursor: 'pointer', fontFamily: 'inherit' }}
+                  >
+                    + {c.name || c.email}
+                  </button>
+                ))}
+              </div>
+              <Link href="/contacte" style={{ fontSize: 12, color: 'var(--accent)', display: 'inline-block', marginTop: 6 }}>Gestionează contactele →</Link>
+            </div>
+          )}
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 2 }}>
+            <label style={{ display: 'flex', gap: 9, alignItems: 'flex-start', fontSize: 13, color: 'var(--muted)', fontWeight: 400, cursor: 'pointer' }}>
+              <input type="checkbox" checked={form.lobby} onChange={(e) => setForm({ ...form, lobby: e.target.checked })} style={{ marginTop: 2, accentColor: 'var(--accent)' }} />
+              Sală de așteptare (admiți tu fiecare participant — bun la consultații și cursuri cu plată)
+            </label>
+            <label style={{ display: 'flex', gap: 9, alignItems: 'flex-start', fontSize: 13, color: 'var(--muted)', fontWeight: 400, cursor: 'pointer' }}>
+              <input type="checkbox" checked={form.webinar} onChange={(e) => setForm({ ...form, webinar: e.target.checked })} style={{ marginTop: 2, accentColor: 'var(--accent)' }} />
+              Mod webinar (participanții doar ascultă; doar gazda vorbește)
+            </label>
+          </div>
 
           <button onClick={submit} disabled={!canSubmit || status === 'sending'}>
             {status === 'sending' ? 'Se trimite…' : 'Programează și trimite invitații'}

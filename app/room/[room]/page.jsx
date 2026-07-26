@@ -12,7 +12,13 @@ import Recording from '../../components/Recording';
 import Whiteboard from '../../components/Whiteboard';
 import Polls from '../../components/Polls';
 import HostControls from '../../components/HostControls';
-import { useEffect, useState } from 'react';
+import FileShare from '../../components/FileShare';
+import QA from '../../components/QA';
+import YouTubeVideo from '../../components/YouTubeVideo';
+import Dock from '../../components/Dock';
+import { ToolsProvider } from '../../components/ToolsProvider';
+import { useT } from '../../components/LangProvider';
+import { useEffect, useState, useMemo } from 'react';
 import { useParams, useSearchParams, useRouter } from 'next/navigation';
 
 export default function Room() {
@@ -22,30 +28,48 @@ export default function Room() {
 
   const room = decodeURIComponent(params.room);
   const username = search.get('username') || 'Invitat';
+  const { t } = useT();
 
   const [token, setToken] = useState('');
   const [error, setError] = useState('');
+  const [waiting, setWaiting] = useState(false);
+  const [canPub, setCanPub] = useState(true);
   const serverUrl = process.env.NEXT_PUBLIC_LIVEKIT_URL;
+
+  // Identitate stabilă pe sesiune (necesară pentru sala de așteptare)
+  const identity = useMemo(() => {
+    if (typeof window === 'undefined') return '';
+    const key = 'aula-id-' + room;
+    let id = null;
+    try { id = sessionStorage.getItem(key); } catch (e) {}
+    if (!id) {
+      id = (username.replace(/\s+/g, '_').slice(0, 20) || 'user') + '-' + Math.random().toString(36).slice(2, 8);
+      try { sessionStorage.setItem(key, id); } catch (e) {}
+    }
+    return id;
+  }, [room, username]);
 
   useEffect(() => {
     let active = true;
-    (async () => {
+    let timer = null;
+    const enc = encodeURIComponent;
+    const tryJoin = async () => {
       try {
-        const res = await fetch(
-          `/api/token?room=${encodeURIComponent(room)}&username=${encodeURIComponent(username)}`
-        );
+        const res = await fetch(`/api/token?room=${enc(room)}&username=${enc(username)}&identity=${enc(identity)}`);
         const data = await res.json();
         if (!active) return;
-        if (data.error) setError(data.error);
-        else setToken(data.token);
+        if (data.error) { setError(data.error); return; }
+        if (data.waiting) { setWaiting(true); timer = setTimeout(tryJoin, 4000); return; }
+        setWaiting(false);
+        setCanPub(data.isHost || !data.webinar);
+        setToken(data.token);
       } catch (e) {
         if (active) setError('Nu am putut obține accesul la ședință.');
       }
-    })();
-    return () => {
-      active = false;
     };
-  }, [room, username]);
+    tryJoin();
+    return () => { active = false; if (timer) clearTimeout(timer); };
+  }, [room, username, identity]);
 
   if (error) {
     return (
@@ -55,8 +79,18 @@ export default function Room() {
     );
   }
 
+  if (waiting) {
+    return (
+      <div className="loading" style={{ flexDirection: 'column', gap: 12, textAlign: 'center', padding: 24 }}>
+        <div style={{ fontSize: 30 }}>⏳</div>
+        <div style={{ color: 'var(--text)', fontSize: 18, fontFamily: "'Space Grotesk', sans-serif" }}>{t('lobbyTitle')}</div>
+        <div>{t('lobbyText')}</div>
+      </div>
+    );
+  }
+
   if (!token || !serverUrl) {
-    return <div className="loading">Se conectează la „{room}”…</div>;
+    return <div className="loading">{t('connecting')} „{room}”…</div>;
   }
 
   return (
@@ -65,22 +99,28 @@ export default function Room() {
         token={token}
         serverUrl={serverUrl}
         connect={true}
-        video={true}
-        audio={true}
+        video={canPub}
+        audio={canPub}
         onDisconnected={() => router.push('/')}
         style={{ height: '100%' }}
       >
-        <VideoConference />
-        <Captions />
-        <BackgroundControl />
-        <LivePresentation />
-        <BreakoutRooms />
-        <RoomNotice />
-        <Reactions />
-        <Recording />
-        <Whiteboard />
-        <Polls />
-        <HostControls />
+        <ToolsProvider>
+          <VideoConference />
+          <RoomNotice />
+          <Dock />
+          <Captions />
+          <BackgroundControl />
+          <LivePresentation />
+          <BreakoutRooms />
+          <Reactions />
+          <Recording />
+          <Whiteboard />
+          <Polls />
+          <HostControls />
+          <FileShare />
+          <QA />
+          <YouTubeVideo />
+        </ToolsProvider>
       </LiveKitRoom>
     </div>
   );

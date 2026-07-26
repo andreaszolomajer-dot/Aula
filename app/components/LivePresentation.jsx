@@ -6,6 +6,7 @@ import { RoomEvent } from 'livekit-client';
 import { THEMES, SlideView } from './SlideView';
 import PdfSlide from './PdfSlide';
 import { authedFetch } from '../../lib/api';
+import { useTools } from './ToolsProvider';
 
 const enc = new TextEncoder();
 const dec = new TextDecoder();
@@ -13,6 +14,7 @@ const dec = new TextDecoder();
 export default function LivePresentation() {
   const room = useRoomContext();
   const { localParticipant } = useLocalParticipant();
+  const { activeTool, setActiveTool } = useTools();
   const username = localParticipant?.name || 'Prezentator';
 
   const [picker, setPicker] = useState(false);
@@ -204,6 +206,14 @@ export default function LivePresentation() {
     return () => window.removeEventListener('keydown', onKey);
   }, [role, nav, stop]);
 
+  useEffect(() => {
+    if (activeTool === 'prezinta' && role === 'none') {
+      openPicker();
+      setActiveTool(null);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTool]);
+
   const onPdfPages = useCallback((n) => setPdfPages(n), []);
 
   const theme = deck ? THEMES[deck.theme] || THEMES[0] : THEMES[0];
@@ -217,12 +227,6 @@ export default function LivePresentation() {
 
   return (
     <>
-      {role === 'none' && (
-        <button className="lp-trigger" onClick={openPicker}>
-          📽 Prezintă live
-        </button>
-      )}
-
       {picker && (
         <div className="lp-picker-overlay" onClick={() => setPicker(false)}>
           <div className="lp-picker" onClick={(e) => e.stopPropagation()}>

@@ -68,6 +68,13 @@ export async function POST(req) {
     if (!error) saved = true;
   }
 
+  // Setează modul sălii (sală de așteptare / webinar), dacă e cerut
+  if (supabase && (body.lobby || body.webinar)) {
+    try {
+      await supabase.from('room_hosts').upsert({ room, lobby: !!body.lobby, webinar: !!body.webinar });
+    } catch (e) {}
+  }
+
   // 2) Construiește invitația de calendar (.ics)
   const ics = buildIcs({
     title,
