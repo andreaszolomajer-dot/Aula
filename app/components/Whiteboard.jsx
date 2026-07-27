@@ -210,17 +210,19 @@ export default function Whiteboard() {
           style={{ cursor: tool === 'text' ? 'text' : 'crosshair' }}
         />
         {textInput && (
-          <input
-            ref={textInputRef}
-            autoFocus
-            className="wb-textin"
-            value={textVal}
-            onChange={(e) => setTextVal(e.target.value)}
-            onKeyDown={(e) => { if (e.key === 'Enter') commitText(); if (e.key === 'Escape') { setTextInput(null); setTextVal(''); } }}
-            onBlur={commitText}
-            style={{ left: textInput.left, top: textInput.top, color, fontSize: 14 + size * 3.2, zIndex: 30 }}
-            placeholder="scrie…"
-          />
+          <div className="wb-textbox" style={{ left: textInput.left, top: textInput.top }}>
+            <input
+              ref={textInputRef}
+              autoFocus
+              value={textVal}
+              onChange={(e) => setTextVal(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Enter') commitText(); if (e.key === 'Escape') { setTextInput(null); setTextVal(''); } }}
+              style={{ color, fontSize: 14 + size * 3.2 }}
+              placeholder="scrie…"
+            />
+            <button className="wb-textok" onMouseDown={(e) => e.preventDefault()} onClick={commitText}>OK</button>
+            <button className="wb-textcancel" onMouseDown={(e) => e.preventDefault()} onClick={() => { setTextInput(null); setTextVal(''); }}>✕</button>
+          </div>
         )}
       </div>
     </div>

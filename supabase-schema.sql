@@ -66,3 +66,6 @@ create table if not exists contacts (
   created_at timestamptz default now(),
   unique (user_id, email)
 );
+
+-- Co-gazde (identități cu drepturi de gazdă)
+alter table room_hosts add column if not exists cohosts text[] default '{}';
