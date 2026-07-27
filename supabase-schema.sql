@@ -69,3 +69,6 @@ create table if not exists contacts (
 
 -- Co-gazde (identități cu drepturi de gazdă)
 alter table room_hosts add column if not exists cohosts text[] default '{}';
+
+-- Cheie de gazdă (linkul de gazdă) — cine o are devine gazdă, indiferent de ordinea intrării
+alter table room_hosts add column if not exists host_key text;

@@ -19,7 +19,14 @@ export default function Home() {
     router.push(`/room/${encodeURIComponent(room.trim())}?username=${encodeURIComponent(name.trim())}`);
   };
   const onKey = (e) => { if (e.key === 'Enter') join(); };
-  const newRoom = () => setRoom(Math.random().toString(36).slice(2, 8));
+  const createHost = async () => {
+    if (!name.trim()) return;
+    try {
+      const res = await fetch('/api/create-room', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ room: room.trim() || undefined }) });
+      const d = await res.json();
+      router.push(`/room/${encodeURIComponent(d.room)}?username=${encodeURIComponent(name.trim())}&host=${encodeURIComponent(d.hostKey)}`);
+    } catch (e) {}
+  };
 
   return (
     <div className="landing">
@@ -50,7 +57,7 @@ export default function Home() {
         <input value={room} onChange={(e) => setRoom(e.target.value)} onKeyDown={onKey} placeholder={t('exRoom')} />
 
         <button onClick={join} disabled={!name.trim() || !room.trim()}>{t('join')}</button>
-        <button onClick={newRoom} style={{ background: 'var(--accent-soft)', color: 'var(--accent)', marginTop: 0 }}>{t('newRoom')}</button>
+        <button onClick={createHost} disabled={!name.trim()} style={{ background: 'var(--accent-soft)', color: 'var(--accent)', marginTop: 0 }}>{t('createHost')}</button>
       </div>
 
       <div className="foot" style={{ display: 'flex', gap: 18, flexWrap: 'wrap', justifyContent: 'center' }}>

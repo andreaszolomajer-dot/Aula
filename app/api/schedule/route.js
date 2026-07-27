@@ -47,8 +47,10 @@ export async function POST(req) {
   }
 
   const room = `${slugify(title)}-${Math.random().toString(36).slice(2, 6)}`;
+  const hostKey = Math.random().toString(36).slice(2, 10);
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
   const joinUrl = `${appUrl}/room/${room}`;
+  const hostUrl = `${appUrl}/room/${room}?host=${hostKey}`;
   const uid = `${room}@aula`;
 
   // 1) Salvează în baza de date (dacă e configurată)
@@ -68,10 +70,10 @@ export async function POST(req) {
     if (!error) saved = true;
   }
 
-  // Setează modul sălii (sală de așteptare / webinar), dacă e cerut
-  if (supabase && (body.lobby || body.webinar)) {
+  // Creează sala cu cheie de gazdă + modurile cerute
+  if (supabase) {
     try {
-      await supabase.from('room_hosts').upsert({ room, lobby: !!body.lobby, webinar: !!body.webinar });
+      await supabase.from('room_hosts').upsert({ room, host_key: hostKey, host_identity: null, cohosts: [], lobby: !!body.lobby, webinar: !!body.webinar });
     } catch (e) {}
   }
 
@@ -132,6 +134,7 @@ export async function POST(req) {
     ok: true,
     room,
     joinUrl,
+    hostUrl,
     saved,
     emailsSent,
     invited: invitees.length,

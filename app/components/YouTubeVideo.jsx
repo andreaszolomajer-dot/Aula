@@ -74,7 +74,7 @@ export default function YouTubeVideo() {
       if (!playerRef.current) {
         playerRef.current = new YT.Player(containerRef.current, {
           videoId,
-          playerVars: { rel: 0, modestbranding: 1, controls: 1, cc_load_policy: 1 },
+          playerVars: { rel: 0, modestbranding: 1, controls: 1 },
           events: {
             onStateChange: (e) => {
               if (roleRef.current !== 'presenter' || !playerRef.current) return;

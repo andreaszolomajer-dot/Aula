@@ -78,6 +78,13 @@ export default function HostControls() {
           {amCohost && !amHost && <p className="hc-muted" style={{ color: 'var(--mint)' }}>Ești co-gazdă în această ședință.</p>}
 
           {amHost && (
+            <button className="hc-invite" onClick={() => {
+              const link = `${window.location.origin}/room/${encodeURIComponent(roomName)}`;
+              try { navigator.clipboard.writeText(link); alert('Link pentru invitați copiat:\n' + link); } catch (e) { prompt('Copiază linkul pentru invitați:', link); }
+            }}>🔗 Copiază link pentru invitați</button>
+          )}
+
+          {amHost && (
             <div className="hc-modes">
               <label className="hc-toggle">
                 <input type="checkbox" checked={lobby} onChange={(e) => setMode(e.target.checked, webinar)} />

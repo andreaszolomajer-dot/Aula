@@ -201,9 +201,23 @@ export default function Schedule() {
               ? `Am trimis ${result.emailsSent} invitații pe email.`
               : 'Ședința e creată. (Trimiterea emailurilor necesită configurarea Resend.)'}
           </p>
-          <label>Link de intrare</label>
+          <label>🔗 Link pentru invitați (dă-l mai departe)</label>
           <input readOnly value={result.joinUrl} onClick={(e) => e.target.select()} />
-          <button onClick={copy}>{copied ? 'Copiat ✓' : 'Copiază linkul'}</button>
+          <button onClick={copy}>{copied ? 'Copiat ✓' : 'Copiază link invitați'}</button>
+
+          {result.hostUrl && (
+            <>
+              <label style={{ marginTop: 8, color: 'var(--mint)' }}>👑 Linkul TĂU de gazdă (nu-l da nimănui)</label>
+              <input readOnly value={result.hostUrl} onClick={(e) => e.target.select()} style={{ borderColor: 'var(--mint)' }} />
+              <button
+                style={{ background: 'var(--mint)', color: '#06231c' }}
+                onClick={() => { navigator.clipboard.writeText(result.hostUrl); }}
+              >
+                Copiază linkul meu de gazdă
+              </button>
+              <p style={{ fontSize: 12, color: 'var(--muted)' }}>Tu intri cu linkul de gazdă → devii gazdă indiferent cine intră primul. Invitații intră cu celălalt link.</p>
+            </>
+          )}
           <Link href="/meetings" style={{ color: 'var(--accent)', fontSize: 14, textAlign: 'center' }}>
             Vezi toate ședințele →
           </Link>

@@ -853,3 +853,7 @@ body.bg-image-active .lk-participant-tile.lk-local-participant video {
 .hc-badge { color: var(--mint); font-size: 10.5px; font-weight: 600; }
 .hc-promote { background: var(--accent-soft) !important; color: var(--accent) !important; }
 .hc-demote { background: var(--surface-3) !important; color: var(--muted) !important; }
+
+/* Buton link invitați în panoul de gazdă */
+.hc-invite { background: var(--accent); color: #fff; border: none; border-radius: 9px; padding: 9px 11px; font-family: inherit; font-size: 12.5px; font-weight: 600; cursor: pointer; }
+.hc-invite:hover { background: #7d84ff; }
