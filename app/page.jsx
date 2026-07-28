@@ -48,6 +48,9 @@ export default function Home() {
         Aula
       </div>
       <p className="tagline">{t('tagline')}</p>
+      <div style={{ display: 'inline-block', margin: '0 auto 4px', background: 'var(--accent-soft)', color: 'var(--accent)', borderRadius: 99, padding: '5px 14px', fontSize: 12.5, fontWeight: 600 }}>
+        ✨ {t('freeNotice')}
+      </div>
 
       <div className="card">
         <label>{t('yourName')}</label>
