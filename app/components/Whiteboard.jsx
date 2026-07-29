@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRoomContext } from '@livekit/components-react';
 import { RoomEvent } from 'livekit-client';
 import { useTools } from './ToolsProvider';
+import { useT } from './LangProvider';
 
 const enc = new TextEncoder();
 const dec = new TextDecoder();
@@ -14,6 +15,7 @@ const SIZES = [2, 4, 8];
 export default function Whiteboard() {
   const room = useRoomContext();
   const { activeTool, setActiveTool } = useTools();
+  const { t } = useT();
   const open = activeTool === 'tabla';
 
   const [color, setColor] = useState('#1B2330');
@@ -194,11 +196,11 @@ export default function Whiteboard() {
           </button>
         ))}
         <span className="wb-div" />
-        <button className={`wb-tool ${tool === 'pen' ? 'on' : ''}`} onClick={() => setTool('pen')}>✏️ Desen</button>
-        <button className={`wb-tool ${tool === 'text' ? 'on' : ''}`} onClick={() => setTool('text')}>🔤 Text</button>
-        <button className={`wb-tool ${tool === 'eraser' ? 'on' : ''}`} onClick={() => setTool('eraser')}>Radieră</button>
-        <button className="wb-tool" onClick={clearBoard}>Șterge tot</button>
-        <button className="wb-tool close" onClick={() => setActiveTool(null)}>✕ Închide</button>
+        <button className={`wb-tool ${tool === 'pen' ? 'on' : ''}`} onClick={() => setTool('pen')}>{t('wbDraw')}</button>
+        <button className={`wb-tool ${tool === 'text' ? 'on' : ''}`} onClick={() => setTool('text')}>{t('wbText')}</button>
+        <button className={`wb-tool ${tool === 'eraser' ? 'on' : ''}`} onClick={() => setTool('eraser')}>{t('wbEraser')}</button>
+        <button className="wb-tool" onClick={clearBoard}>{t('wbClear')}</button>
+        <button className="wb-tool close" onClick={() => setActiveTool(null)}>{t('wbClose')}</button>
       </div>
       <div className="wb-board" ref={boardRef} style={{ position: 'relative' }}>
         <canvas
@@ -218,7 +220,7 @@ export default function Whiteboard() {
               onChange={(e) => setTextVal(e.target.value)}
               onKeyDown={(e) => { if (e.key === 'Enter') commitText(); if (e.key === 'Escape') { setTextInput(null); setTextVal(''); } }}
               style={{ color, fontSize: 14 + size * 3.2 }}
-              placeholder="scrie…"
+              placeholder={t('wbWrite')}
             />
             <button className="wb-textok" onMouseDown={(e) => e.preventDefault()} onClick={commitText}>OK</button>
             <button className="wb-textcancel" onMouseDown={(e) => e.preventDefault()} onClick={() => { setTextInput(null); setTextVal(''); }}>✕</button>

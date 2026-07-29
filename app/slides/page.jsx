@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useT } from '../components/LangProvider';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { authedFetch } from '../../lib/api';
@@ -14,6 +15,7 @@ function uuid() {
 }
 
 export default function SlidesList() {
+  const { t } = useT();
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [configured, setConfigured] = useState(true);
@@ -40,7 +42,7 @@ export default function SlidesList() {
   const remove = async (id, e) => {
     e.preventDefault();
     e.stopPropagation();
-    if (!confirm('Ștergi prezentarea?')) return;
+    if (!confirm(t('slDelConfirm'))) return;
     await authedFetch(`/api/presentations?id=${id}`, { method: 'DELETE' });
     load();
   };
@@ -54,16 +56,16 @@ export default function SlidesList() {
             <path d="M8 20h8M12 16v4M7 9l3 3 5-5" />
           </svg>
         </span>
-        Prezentări
+        {t('slTitle')}
       </div>
-      <p className="tagline">Creează slide-uri și prezintă-le în ședință.</p>
+      <p className="tagline">{t('slSub')}</p>
 
       <div style={{ width: '100%', maxWidth: 520 }}>
         <button onClick={create} style={btnPrimary}>
-          + Prezentare nouă
+          {t('slNew')}
         </button>
 
-        {loading && <p className="foot" style={{ textAlign: 'center' }}>Se încarcă…</p>}
+        {loading && <p className="foot" style={{ textAlign: 'center' }}>{t('slLoading')}</p>}
 
         {!loading && !configured && (
           <div className="card" style={{ marginTop: 14 }}>
@@ -81,11 +83,11 @@ export default function SlidesList() {
                 <div style={{ flex: 1 }}>
                   <b style={{ color: 'var(--text)' }}>{p.title}</b>
                   <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 3 }}>
-                    Modificat: {new Date(p.updated_at).toLocaleString('ro-RO')}
+                    {t('slModified')} {new Date(p.updated_at).toLocaleString('ro-RO')}
                   </div>
                 </div>
                 <button onClick={(e) => remove(p.id, e)} style={btnDelete}>
-                  Șterge
+                  {t('slDelete')}
                 </button>
               </div>
             </Link>
@@ -93,7 +95,7 @@ export default function SlidesList() {
       </div>
 
       <div className="foot">
-        <Link href="/" style={{ color: 'var(--muted)' }}>← Acasă</Link>
+        <Link href="/" style={{ color: 'var(--muted)' }}>{t('navHome')}</Link>
       </div>
     </div>
   );

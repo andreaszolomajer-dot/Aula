@@ -3,12 +3,14 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRoomContext, useLocalParticipant, useParticipants } from '@livekit/components-react';
 import { useTools } from './ToolsProvider';
+import { useT } from './LangProvider';
 
 export default function HostControls() {
   const room = useRoomContext();
   const { localParticipant } = useLocalParticipant();
   const participants = useParticipants();
   const { activeTool, setActiveTool } = useTools();
+  const { t } = useT();
   const open = activeTool === 'gazda';
 
   const roomName = room?.name || '';
@@ -60,73 +62,73 @@ export default function HostControls() {
   const admit = async (target) => { setBusy(target); await post('admit', { target }); setWaitingList((w) => w.filter((x) => x.identity !== target)); setBusy(''); };
   const muteAll = async () => { setBusy('all'); await post('muteAll'); setBusy(''); };
   const muteOne = async (target) => { setBusy(target); await post('mute', { target }); setBusy(''); };
-  const removeOne = async (target) => { if (!confirm('Scoți acest participant din ședință?')) return; setBusy(target); await post('remove', { target }); setBusy(''); };
+  const removeOne = async (target) => { if (!confirm(t('hcRemoveConfirm'))) return; setBusy(target); await post('remove', { target }); setBusy(''); };
   const promote = async (target) => { setBusy(target); const d = await post('promote', { target }); if (d.cohosts) setCohosts(d.cohosts); setBusy(''); };
   const demote = async (target) => { setBusy(target); const d = await post('demote', { target }); if (d.cohosts) setCohosts(d.cohosts); setBusy(''); };
 
   return (
     <div className="panel-float panel-left">
       <div className="panel-head">
-        Controale gazdă
+        {t('hcTitle')}
         <button className="panel-x" onClick={() => setActiveTool(null)}>✕</button>
       </div>
 
       {!canManage ? (
-        <p className="hc-muted">Doar gazda ședinței (sau o co-gazdă) are aceste controale. Gazda este prima persoană care a intrat.</p>
+        <p className="hc-muted">{t('hcNotHost')}</p>
       ) : (
         <>
-          {amCohost && !amHost && <p className="hc-muted" style={{ color: 'var(--mint)' }}>Ești co-gazdă în această ședință.</p>}
+          {amCohost && !amHost && <p className="hc-muted" style={{ color: 'var(--mint)' }}>{t('hcAmCo')}</p>}
 
           {amHost && (
             <button className="hc-invite" onClick={() => {
               const link = `${window.location.origin}/room/${encodeURIComponent(roomName)}`;
-              try { navigator.clipboard.writeText(link); alert('Link pentru invitați copiat:\n' + link); } catch (e) { prompt('Copiază linkul pentru invitați:', link); }
-            }}>🔗 Copiază link pentru invitați</button>
+              try { navigator.clipboard.writeText(link); alert(t('hcInviteCopied') + '\n' + link); } catch (e) { prompt('Copiază linkul pentru invitați:', link); }
+            }}>🔗 {t('hcInvite')}</button>
           )}
 
           {amHost && (
             <div className="hc-modes">
               <label className="hc-toggle">
                 <input type="checkbox" checked={lobby} onChange={(e) => setMode(e.target.checked, webinar)} />
-                <span><b>Sală de așteptare</b><br /><small>Admiți tu (sau co-gazdele) pe fiecare</small></span>
+                <span><b>{t('hcLobby')}</b><br /><small>{t('hcLobbyHint')}</small></span>
               </label>
               <label className="hc-toggle">
                 <input type="checkbox" checked={webinar} onChange={(e) => setMode(lobby, e.target.checked)} />
-                <span><b>Mod webinar</b><br /><small>Participanții doar ascultă</small></span>
+                <span><b>{t('hcWebinar')}</b><br /><small>{t('hcWebinarHint')}</small></span>
               </label>
             </div>
           )}
 
           {lobby && (
             <div className="hc-wait">
-              <div className="hc-sub">În așteptare ({waitingList.length})</div>
-              {waitingList.length === 0 && <p className="hc-muted">Nimeni nu așteaptă.</p>}
+              <div className="hc-sub">{t('hcWaiting')} ({waitingList.length})</div>
+              {waitingList.length === 0 && <p className="hc-muted">{t('hcNobody')}</p>}
               {waitingList.map((w) => (
                 <div key={w.identity} className="hc-row">
                   <span className="hc-name">{w.name}</span>
-                  <button className="hc-admit" onClick={() => admit(w.identity)} disabled={busy === w.identity}>Admite</button>
+                  <button className="hc-admit" onClick={() => admit(w.identity)} disabled={busy === w.identity}>{t('hcAdmit')}</button>
                 </div>
               ))}
             </div>
           )}
 
-          <button className="hc-muteall" onClick={muteAll} disabled={busy === 'all'}>🔇 {busy === 'all' ? 'Se aplică…' : 'Oprește microfonul tuturor'}</button>
-          <p className="hc-muted" style={{ fontSize: 11.5, marginTop: -4 }}>(Nu afectează gazda și co-gazdele.)</p>
+          <button className="hc-muteall" onClick={muteAll} disabled={busy === 'all'}>🔇 {busy === 'all' ? t('hcMuting') : t('hcMuteAll')}</button>
+          <p className="hc-muted" style={{ fontSize: 11.5, marginTop: -4 }}>{t('hcMuteNote')}</p>
 
           <div className="hc-list">
-            <div className="hc-sub">Participanți</div>
-            {others.length === 0 && <p className="hc-muted">Niciun alt participant.</p>}
+            <div className="hc-sub">{t('hcParticipants')}</div>
+            {others.length === 0 && <p className="hc-muted">{t('hcNoOthers')}</p>}
             {others.map((p) => {
               const isCo = cohosts.includes(p.identity);
               return (
                 <div key={p.identity} className="hc-row">
-                  <span className="hc-name">{p.name || p.identity}{isCo && <span className="hc-badge"> co-gazdă</span>}</span>
-                  <button onClick={() => muteOne(p.identity)} disabled={busy === p.identity}>Mute</button>
+                  <span className="hc-name">{p.name || p.identity}{isCo && <span className="hc-badge">{t('hcCoBadge')}</span>}</span>
+                  <button onClick={() => muteOne(p.identity)} disabled={busy === p.identity}>{t('hcMute')}</button>
                   {amHost && (isCo
-                    ? <button className="hc-demote" onClick={() => demote(p.identity)} disabled={busy === p.identity}>− co</button>
-                    : <button className="hc-promote" onClick={() => promote(p.identity)} disabled={busy === p.identity}>+ co</button>
+                    ? <button className="hc-demote" onClick={() => demote(p.identity)} disabled={busy === p.identity}>{t('hcDemote')}</button>
+                    : <button className="hc-promote" onClick={() => promote(p.identity)} disabled={busy === p.identity}>{t('hcPromote')}</button>
                   )}
-                  {amHost && <button className="hc-remove" onClick={() => removeOne(p.identity)} disabled={busy === p.identity}>Scoate</button>}
+                  {amHost && <button className="hc-remove" onClick={() => removeOne(p.identity)} disabled={busy === p.identity}>{t('hcRemove')}</button>}
                 </div>
               );
             })}

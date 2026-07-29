@@ -4,11 +4,13 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRoomContext } from '@livekit/components-react';
 import { useRouter } from 'next/navigation';
 import { useTools } from './ToolsProvider';
+import { useT } from './LangProvider';
 
 export default function BreakoutRooms() {
   const room = useRoomContext();
   const router = useRouter();
   const { activeTool, setActiveTool } = useTools();
+  const { t } = useT();
   const open = activeTool === 'camere';
 
   const roomName = room?.name || '';
@@ -36,60 +38,38 @@ export default function BreakoutRooms() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [main, isBreakout]);
 
-  useEffect(() => {
-    load();
-    const t = setInterval(load, 4000);
-    return () => clearInterval(t);
-  }, [load]);
+  useEffect(() => { load(); const tm = setInterval(load, 4000); return () => clearInterval(tm); }, [load]);
 
   const create = async () => {
     if (!name.trim()) return;
     await fetch('/api/breakouts', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ main, action: 'create', name: name.trim() }) });
     setName(''); load();
   };
-  const del = async (slug) => {
-    await fetch('/api/breakouts', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ main, action: 'delete', slug }) });
-    load();
-  };
-  const recall = async () => {
-    await fetch('/api/breakouts', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ main, action: 'recall' }) });
-  };
+  const del = async (slug) => { await fetch('/api/breakouts', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ main, action: 'delete', slug }) }); load(); };
+  const recall = async () => { await fetch('/api/breakouts', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ main, action: 'recall' }) }); };
 
   if (!open) return null;
 
   return (
     <div className="panel-float panel-right">
-      <div className="panel-head">
-        Camere separate
-        <button className="panel-x" onClick={() => setActiveTool(null)}>✕</button>
-      </div>
-
-      {isBreakout && (
-        <button className="br-main" onClick={() => goTo(main)}>← Înapoi în sala principală</button>
-      )}
-
-      {!configured && <p className="br-muted">Necesită Supabase configurat (vezi README).</p>}
-      {configured && rooms.length === 0 && <p className="br-muted">Nicio cameră separată încă.</p>}
-
+      <div className="panel-head">{t('brTitle')}<button className="panel-x" onClick={() => setActiveTool(null)}>✕</button></div>
+      {isBreakout && <button className="br-main" onClick={() => goTo(main)}>{t('brBack')}</button>}
+      {!configured && <p className="br-muted">{t('brNeedDb')}</p>}
+      {configured && rooms.length === 0 && <p className="br-muted">{t('brNone')}</p>}
       {rooms.map((r) => (
         <div key={r.slug} className="br-item">
           <span className="br-name">{r.name}</span>
-          {currentSlug === r.slug ? (
-            <span className="br-here">Ești aici</span>
-          ) : (
-            <button className="br-join" onClick={() => goTo(`${main}--${r.slug}`)}>Intră</button>
-          )}
-          <button className="br-del" onClick={() => del(r.slug)} title="Șterge">✕</button>
+          {currentSlug === r.slug ? <span className="br-here">{t('brHere')}</span> : <button className="br-join" onClick={() => goTo(`${main}--${r.slug}`)}>{t('brJoin')}</button>}
+          <button className="br-del" onClick={() => del(r.slug)}>✕</button>
         </div>
       ))}
-
       {configured && (
         <>
           <div className="br-create">
-            <input value={name} onChange={(e) => setName(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && create()} placeholder="Nume grup (ex. Echipa A)" />
+            <input value={name} onChange={(e) => setName(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && create()} placeholder={t('brNamePh')} />
             <button onClick={create}>+</button>
           </div>
-          <button className="br-recall" onClick={recall}>📣 Cheamă pe toți în sala principală</button>
+          <button className="br-recall" onClick={recall}>{t('brRecall')}</button>
         </>
       )}
     </div>
