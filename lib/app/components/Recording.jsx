@@ -33,24 +33,48 @@ export default function Recording() {
   const start = async () => {
     setErr(''); setDownloadUrl('');
     try {
-      const display = await navigator.mediaDevices.getDisplayMedia({ video: { frameRate: 30 }, audio: true });
+      const display = await navigator.mediaDevices.getDisplayMedia({ video: { frameRate: 24 }, audio: true });
       let mic = null;
-      try { mic = await navigator.mediaDevices.getUserMedia({ audio: true }); } catch (e) {}
+      try {
+        mic = await navigator.mediaDevices.getUserMedia({
+          audio: {
+            echoCancellation: true,
+            noiseSuppression: true,
+            autoGainControl: true,
+            channelCount: 1,
+            sampleRate: 48000,
+          },
+        });
+      } catch (e) {}
       let audioTrack = null;
       const AC = window.AudioContext || window.webkitAudioContext;
       if (AC && (display.getAudioTracks().length || mic)) {
-        const ctx = new AC(); audioCtxRef.current = ctx;
+        let ctx;
+        try { ctx = new AC({ sampleRate: 48000 }); } catch (e) { ctx = new AC(); }
+        audioCtxRef.current = ctx;
         const dest = ctx.createMediaStreamDestination();
-        if (display.getAudioTracks().length) ctx.createMediaStreamSource(new MediaStream(display.getAudioTracks())).connect(dest);
-        if (mic) ctx.createMediaStreamSource(mic).connect(dest);
+        if (display.getAudioTracks().length) {
+          const sysGain = ctx.createGain(); sysGain.gain.value = 0.9;
+          ctx.createMediaStreamSource(new MediaStream(display.getAudioTracks())).connect(sysGain).connect(dest);
+        }
+        if (mic) {
+          const micGain = ctx.createGain(); micGain.gain.value = 1.0;
+          ctx.createMediaStreamSource(mic).connect(micGain).connect(dest);
+        }
         audioTrack = dest.stream.getAudioTracks()[0];
       }
       const tracks = [display.getVideoTracks()[0]];
       if (audioTrack) tracks.push(audioTrack); else if (display.getAudioTracks()[0]) tracks.push(display.getAudioTracks()[0]);
       const combined = new MediaStream(tracks);
       streamsRef.current = [display, mic].filter(Boolean);
-      const mime = MediaRecorder.isTypeSupported('video/webm;codecs=vp9,opus') ? 'video/webm;codecs=vp9,opus' : 'video/webm';
-      const rec = new MediaRecorder(combined, { mimeType: mime });
+      const pick = (m) => (MediaRecorder.isTypeSupported(m) ? m : null);
+      const mime = pick('video/webm;codecs=vp9,opus') || pick('video/webm;codecs=vp8,opus') || pick('video/webm') || '';
+      let rec;
+      try {
+        rec = new MediaRecorder(combined, { mimeType: mime, audioBitsPerSecond: 128000, videoBitsPerSecond: 2500000 });
+      } catch (e) {
+        rec = new MediaRecorder(combined, mime ? { mimeType: mime } : undefined);
+      }
       chunksRef.current = [];
       rec.ondataavailable = (e) => { if (e.data && e.data.size) chunksRef.current.push(e.data); };
       rec.onstop = () => { setDownloadUrl(URL.createObjectURL(new Blob(chunksRef.current, { type: 'video/webm' }))); cleanup(); };
