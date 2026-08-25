@@ -2,9 +2,11 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { useTools } from './ToolsProvider';
+import { useT } from './LangProvider';
 
 export default function Recording() {
   const { activeTool, setActiveTool } = useTools();
+  const { t } = useT();
   const [recording, setRecording] = useState(false);
   const [seconds, setSeconds] = useState(0);
   const [downloadUrl, setDownloadUrl] = useState('');
@@ -58,7 +60,7 @@ export default function Recording() {
       setRecording(true); setSeconds(0);
       timerRef.current = setInterval(() => setSeconds((s) => s + 1), 1000);
     } catch (e) {
-      setErr('Înregistrarea a fost anulată sau nu e permisă.');
+      setErr(t('recErr'));
       setTimeout(() => setErr(''), 4000);
     }
   };
@@ -81,10 +83,10 @@ export default function Recording() {
   return (
     <div className="rec-control">
       {recording && (
-        <button className="rec-btn on" onClick={stop}><span className="rec-dot" /> {fmt(seconds)} · Oprește</button>
+        <button className="rec-btn on" onClick={stop}><span className="rec-dot" /> {fmt(seconds)} · {t('recStop')}</button>
       )}
       {downloadUrl && !recording && (
-        <a className="rec-download" href={downloadUrl} download={`aula-inregistrare-${Date.now()}.webm`} onClick={() => setTimeout(() => setDownloadUrl(''), 1500)}>⬇ Descarcă înregistrarea</a>
+        <a className="rec-download" href={downloadUrl} download={`aula-inregistrare-${Date.now()}.webm`} onClick={() => setTimeout(() => setDownloadUrl(''), 1500)}>{t('recDownload')}</a>
       )}
       {err && <div className="rec-err">{err}</div>}
     </div>

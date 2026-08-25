@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRoomContext, useLocalParticipant } from '@livekit/components-react';
 import { RoomEvent } from 'livekit-client';
 import { useTools } from './ToolsProvider';
+import { useT } from './LangProvider';
 
 const enc = new TextEncoder();
 const dec = new TextDecoder();
@@ -13,6 +14,7 @@ export default function Reactions() {
   const room = useRoomContext();
   const { localParticipant } = useLocalParticipant();
   const { activeTool } = useTools();
+  const { t } = useT();
   const open = activeTool === 'reactii';
   const myName = localParticipant?.name || 'Tu';
   const myId = localParticipant?.identity || 'me';
@@ -75,7 +77,7 @@ export default function Reactions() {
           {open && (
             <div className="rx-bar">
               {EMOJIS.map((e) => (<button key={e} onClick={() => react(e)} className="rx-emoji">{e}</button>))}
-              <button className={`rx-hand ${myHand ? 'on' : ''}`} onClick={toggleHand} title="Ridică mâna">✋</button>
+              <button className={`rx-hand ${myHand ? 'on' : ''}`} onClick={toggleHand} title={t('rxHandHint')}>✋</button>
             </div>
           )}
         </div>

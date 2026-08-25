@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRoomContext, useLocalParticipant } from '@livekit/components-react';
 import { RoomEvent } from 'livekit-client';
 import { useTools } from './ToolsProvider';
+import { useT } from './LangProvider';
 
 const enc = new TextEncoder();
 const dec = new TextDecoder();
@@ -39,6 +40,7 @@ export default function YouTubeVideo() {
   const room = useRoomContext();
   const { localParticipant } = useLocalParticipant();
   const { activeTool, setActiveTool } = useTools();
+  const { t } = useT();
   const username = localParticipant?.name || 'Prezentator';
 
   const [role, setRole] = useState('none'); // 'presenter' | 'viewer' | 'none'
@@ -74,7 +76,7 @@ export default function YouTubeVideo() {
       if (!playerRef.current) {
         playerRef.current = new YT.Player(containerRef.current, {
           videoId,
-          playerVars: { rel: 0, modestbranding: 1, controls: isPresenter ? 1 : 0, disablekb: isPresenter ? 0 : 1 },
+          playerVars: { rel: 0, modestbranding: 1, controls: 1 },
           events: {
             onStateChange: (e) => {
               if (roleRef.current !== 'presenter' || !playerRef.current) return;
@@ -134,7 +136,7 @@ export default function YouTubeVideo() {
 
   const startVideo = () => {
     const id = extractId(url);
-    if (!id) { setErr('Link YouTube invalid. Lipește un link complet.'); return; }
+    if (!id) { setErr(t('ytBad')); return; }
     setErr('');
     setRole('presenter'); setVideoId(id); videoIdRef.current = id;
     broadcast({ t: 'load', videoId: id, by: username });
@@ -150,17 +152,17 @@ export default function YouTubeVideo() {
   if (activeTool === 'video' && role === 'none') {
     return (
       <div className="panel-float panel-left" style={{ top: 90 }}>
-        <div className="panel-head">Video YouTube <button className="panel-x" onClick={() => setActiveTool(null)}>✕</button></div>
-        <p className="br-muted">Lipește un link YouTube (merge și clip Nelistat). Îl vor vedea toți, sincronizat.</p>
+        <div className="panel-head">{t('ytTitle')} <button className="panel-x" onClick={() => setActiveTool(null)}>✕</button></div>
+        <p className="br-muted">{t('ytHint')}</p>
         <input className="pl-input" value={url} onChange={(e) => setUrl(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && startVideo()} placeholder="https://youtu.be/..." />
-        <button className="fs-upload" onClick={startVideo}>▶️ Redă pentru toți</button>
+        <button className="fs-upload" onClick={startVideo}>{t('ytPlay')}</button>
         {err && <p className="br-muted" style={{ color: 'var(--warm, #F5A742)' }}>{err}</p>}
       </div>
     );
   }
 
   if (active && role === 'viewer' && hidden) {
-    return <button className="lp-trigger" onClick={() => setHidden(false)}>▶️ Arată videoul</button>;
+    return <button className="lp-trigger" onClick={() => setHidden(false)}>{t('ytShow')}</button>;
   }
 
   if (!active) return null;
@@ -171,13 +173,13 @@ export default function YouTubeVideo() {
       <div className="lp-bar">
         {role === 'presenter' ? (
           <>
-            <span className="lp-live" style={{ color: 'var(--mint)' }}>▶️ Redai pentru toți</span>
-            <button className="lp-stop" onClick={stopForAll}>■ Oprește</button>
+            <span className="lp-live" style={{ color: 'var(--mint)' }}>{t('ytPlaying')}</span>
+            <button className="lp-stop" onClick={stopForAll}>{t('ytStop')}</button>
           </>
         ) : (
           <>
             <span className="lp-live">● LIVE · {presenterName}</span>
-            <button onClick={() => setHidden(true)}>Ascunde</button>
+            <button onClick={() => setHidden(true)}>{t('ytHide')}</button>
           </>
         )}
       </div>

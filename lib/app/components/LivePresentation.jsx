@@ -7,6 +7,7 @@ import { THEMES, SlideView } from './SlideView';
 import PdfSlide from './PdfSlide';
 import { authedFetch } from '../../lib/api';
 import { useTools } from './ToolsProvider';
+import { useT } from './LangProvider';
 
 const enc = new TextEncoder();
 const dec = new TextDecoder();
@@ -15,6 +16,7 @@ export default function LivePresentation() {
   const room = useRoomContext();
   const { localParticipant } = useLocalParticipant();
   const { activeTool, setActiveTool } = useTools();
+  const { t } = useT();
   const username = localParticipant?.name || 'Prezentator';
 
   const [picker, setPicker] = useState(false);
@@ -156,10 +158,10 @@ export default function LivePresentation() {
         setRole('presenter'); setPicker(false);
         broadcast({ presenting: true, mode: 'pdf', url: d.url, page: 1, by: username });
       } else {
-        setErr(d.error || 'Încărcarea a eșuat.');
+        setErr(d.error || t('lpFail'));
       }
     } catch (e) {
-      setErr('Încărcarea a eșuat.');
+      setErr(t('lpFail'));
     }
     setUploading(false);
     e.target.value = '';
@@ -230,10 +232,10 @@ export default function LivePresentation() {
       {picker && (
         <div className="lp-picker-overlay" onClick={() => setPicker(false)}>
           <div className="lp-picker" onClick={(e) => e.stopPropagation()}>
-            <h3>Prezintă live tuturor</h3>
+            <h3>{t('lpTitle')}</h3>
 
             <button className="lp-pdf" onClick={() => fileRef.current?.click()} disabled={uploading}>
-              {uploading ? 'Se încarcă…' : '📄 Încarcă PDF (PowerPoint exportat)'}
+              {uploading ? t('lpUploading') : t('lpUploadPdf')}
             </button>
             <input
               ref={fileRef}
@@ -244,10 +246,10 @@ export default function LivePresentation() {
             />
             {err && <p className="lp-muted" style={{ color: '#F5A742' }}>{err}</p>}
 
-            <div className="lp-sep">sau o prezentare Aula salvată</div>
+            <div className="lp-sep">{t('lpSaved')}</div>
 
             {list.length === 0 && (
-              <p className="lp-muted">Nicio prezentare salvată încă.</p>
+              <p className="lp-muted">{t('lpNone')}</p>
             )}
             {list.map((p) => (
               <button key={p.id} className="lp-item" onClick={() => startDeck(p.id)}>
@@ -285,7 +287,7 @@ export default function LivePresentation() {
                 <button onClick={() => nav(-1)}>‹</button>
                 <span>{pos} / {total}</span>
                 <button onClick={() => nav(1)}>›</button>
-                <button className="lp-stop" onClick={stop}>■ Oprește</button>
+                <button className="lp-stop" onClick={stop}>{t('lpStop')}</button>
               </>
             ) : (
               <>

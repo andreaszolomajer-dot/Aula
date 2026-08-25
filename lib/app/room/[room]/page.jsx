@@ -15,6 +15,7 @@ import HostControls from '../../components/HostControls';
 import FileShare from '../../components/FileShare';
 import QA from '../../components/QA';
 import YouTubeVideo from '../../components/YouTubeVideo';
+import CopyInvite from '../../components/CopyInvite';
 import Dock from '../../components/Dock';
 import { ToolsProvider } from '../../components/ToolsProvider';
 import { useT } from '../../components/LangProvider';
@@ -28,6 +29,7 @@ export default function Room() {
 
   const room = decodeURIComponent(params.room);
   const username = search.get('username') || 'Invitat';
+  const hostKey = search.get('host') || '';
   const { t } = useT();
 
   const [token, setToken] = useState('');
@@ -55,7 +57,7 @@ export default function Room() {
     const enc = encodeURIComponent;
     const tryJoin = async () => {
       try {
-        const res = await fetch(`/api/token?room=${enc(room)}&username=${enc(username)}&identity=${enc(identity)}`);
+        const res = await fetch(`/api/token?room=${enc(room)}&username=${enc(username)}&identity=${enc(identity)}${hostKey ? `&host=${enc(hostKey)}` : ''}`);
         const data = await res.json();
         if (!active) return;
         if (data.error) { setError(data.error); return; }
@@ -69,7 +71,7 @@ export default function Room() {
     };
     tryJoin();
     return () => { active = false; if (timer) clearTimeout(timer); };
-  }, [room, username, identity]);
+  }, [room, username, identity, hostKey]);
 
   if (error) {
     return (
@@ -106,6 +108,7 @@ export default function Room() {
       >
         <ToolsProvider>
           <VideoConference />
+          <CopyInvite />
           <RoomNotice />
           <Dock />
           <Captions />

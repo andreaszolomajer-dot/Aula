@@ -842,3 +842,18 @@ body.bg-image-active [data-lk-local-participant='true'] video,
 body.bg-image-active .lk-participant-tile.lk-local-participant video {
   transform: scaleX(1) !important;
 }
+
+/* Căsuță text pe tablă */
+.wb-textbox { position: absolute; z-index: 30; display: flex; align-items: center; gap: 4px; background: rgba(255,255,255,0.96); border: 1px solid #9aa; border-radius: 8px; padding: 3px 4px; box-shadow: 0 4px 14px rgba(0,0,0,0.25); }
+.wb-textbox input { border: none; outline: none; background: transparent; font-family: 'Inter', system-ui, sans-serif; font-weight: 600; min-width: 110px; }
+.wb-textok { background: var(--accent); color: #fff; border: none; border-radius: 6px; padding: 4px 9px; font-size: 12px; font-weight: 600; cursor: pointer; }
+.wb-textcancel { background: #eee; color: #444; border: none; border-radius: 6px; padding: 4px 8px; font-size: 12px; cursor: pointer; }
+
+/* Badge + butoane co-gazdă */
+.hc-badge { color: var(--mint); font-size: 10.5px; font-weight: 600; }
+.hc-promote { background: var(--accent-soft) !important; color: var(--accent) !important; }
+.hc-demote { background: var(--surface-3) !important; color: var(--muted) !important; }
+
+/* Buton link invitați în panoul de gazdă */
+.hc-invite { background: var(--accent); color: #fff; border: none; border-radius: 9px; padding: 9px 11px; font-family: inherit; font-size: 12.5px; font-weight: 600; cursor: pointer; }
+.hc-invite:hover { background: #7d84ff; }

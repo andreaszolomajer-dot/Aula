@@ -1,12 +1,14 @@
 'use client';
 
 import { useState } from 'react';
+import { useT } from '../components/LangProvider';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { getSupabaseBrowser } from '../../lib/supabaseClient';
 import { useAuth } from '../components/AuthProvider';
 
 export default function Login() {
+  const { t } = useT();
   const supabase = getSupabaseBrowser();
   const { configured } = useAuth();
   const router = useRouter();
@@ -30,14 +32,14 @@ export default function Login() {
           options: { data: { marketing_opt_in: marketingOptIn } },
         });
         if (error) setMsg(error.message);
-        else setMsg('Cont creat. Verifică emailul dacă se cere confirmarea, apoi conectează-te.');
+        else setMsg(t('logCreated'));
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password: pass });
         if (error) setMsg(error.message);
         else router.push('/');
       }
     } catch (e) {
-      setMsg('A apărut o eroare.');
+      setMsg(t('logErr'));
     }
     setBusy(false);
   };
@@ -47,7 +49,7 @@ export default function Login() {
     setBusy(true);
     setMsg('');
     const { error } = await supabase.auth.signInWithOtp({ email });
-    setMsg(error ? error.message : 'Ți-am trimis un link de conectare pe email.');
+    setMsg(error ? error.message : t('logLinkSent'));
     setBusy(false);
   };
 
@@ -59,9 +61,9 @@ export default function Login() {
             <path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8z" />
           </svg>
         </span>
-        {mode === 'signup' ? 'Cont nou' : 'Conectează-te'}
+        {mode === 'signup' ? t('logNewAcc') : t('logSignin')}
       </div>
-      <p className="tagline">Salvează-ți ședințele și prezentările.</p>
+      <p className="tagline">{t('logSub')}</p>
 
       {!configured ? (
         <div className="card">
@@ -69,18 +71,18 @@ export default function Login() {
             Autentificarea nu e configurată încă. Adaugă <code>NEXT_PUBLIC_SUPABASE_URL</code> și{' '}
             <code>NEXT_PUBLIC_SUPABASE_ANON_KEY</code> în <code>.env.local</code> (vezi README).
           </p>
-          <Link href="/" style={{ color: 'var(--accent)', textAlign: 'center' }}>← Acasă</Link>
+          <Link href="/" style={{ color: 'var(--accent)', textAlign: 'center' }}>{t('navHome')}</Link>
         </div>
       ) : (
         <div className="card">
-          <label>Email</label>
+          <label>{t('logEmail')}</label>
           <input
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="tu@exemplu.ro"
           />
-          <label>Parolă</label>
+          <label>{t('logPass')}</label>
           <input
             type="password"
             value={pass}
@@ -102,12 +104,12 @@ export default function Login() {
                 onChange={(e) => setMarketingOptIn(e.target.checked)}
                 style={{ width: 16, height: 16, marginTop: 1, flexShrink: 0, accentColor: 'var(--accent)' }}
               />
-              Vreau să primesc sfaturi și noutăți pe email. Îmi pot retrage acordul oricând.
+              {t('logOptin')}
             </label>
           )}
 
           <button onClick={submit} disabled={busy || !email || !pass}>
-            {busy ? 'Se procesează…' : mode === 'signup' ? 'Creează cont' : 'Intră în cont'}
+            {busy ? t('logProcessing') : mode === 'signup' ? t('logCreateAcc') : t('logEnterAcc')}
           </button>
 
           <button
@@ -115,7 +117,7 @@ export default function Login() {
             disabled={busy || !email}
             style={{ background: 'var(--accent-soft)', color: 'var(--accent)', marginTop: 0 }}
           >
-            Trimite-mi un link de conectare
+            {t('logMagic')}
           </button>
 
           {msg && <p style={{ fontSize: 13, color: 'var(--mint)' }}>{msg}</p>}
@@ -124,13 +126,13 @@ export default function Login() {
             onClick={() => setMode(mode === 'signup' ? 'signin' : 'signup')}
             style={{ background: 'none', border: 'none', color: 'var(--muted)', cursor: 'pointer', fontSize: 13 }}
           >
-            {mode === 'signup' ? 'Ai deja cont? Conectează-te' : 'Nu ai cont? Creează unul'}
+            {mode === 'signup' ? t('logHaveAcc') : t('logNoAcc')}
           </button>
         </div>
       )}
 
       <div className="foot">
-        <Link href="/" style={{ color: 'var(--muted)' }}>← Acasă</Link>
+        <Link href="/" style={{ color: 'var(--muted)' }}>{t('navHome')}</Link>
       </div>
     </div>
   );

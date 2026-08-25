@@ -1,11 +1,13 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useT } from '../components/LangProvider';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { authedFetch } from '../../lib/api';
 
 export default function Meetings() {
+  const { t } = useT();
   const [meetings, setMeetings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [configured, setConfigured] = useState(true);
@@ -37,12 +39,12 @@ export default function Meetings() {
             <path d="M16 2v4M8 2v4M3 10h18" />
           </svg>
         </span>
-        Ședințele mele
+        {t('mtTitle')}
       </div>
-      <p className="tagline">Ședințele programate care urmează.</p>
+      <p className="tagline">{t('mtSub')}</p>
 
       <div style={{ width: '100%', maxWidth: 460 }}>
-        {loading && <p className="foot" style={{ textAlign: 'center' }}>Se încarcă…</p>}
+        {loading && <p className="foot" style={{ textAlign: 'center' }}>{t('mtLoading')}</p>}
 
         {!loading && !configured && (
           <div className="card">
@@ -56,9 +58,9 @@ export default function Meetings() {
 
         {!loading && configured && meetings.length === 0 && (
           <div className="card" style={{ alignItems: 'center', textAlign: 'center' }}>
-            <p style={{ color: 'var(--muted)' }}>Nicio ședință programată încă.</p>
+            <p style={{ color: 'var(--muted)' }}>{t('mtNone')}</p>
             <Link href="/schedule">
-              <button style={{ marginTop: 8 }}>Programează prima ședință</button>
+              <button style={{ marginTop: 8 }}>{t('mtFirst')}</button>
             </Link>
           </div>
         )}
@@ -79,27 +81,27 @@ export default function Meetings() {
               <span style={{ fontSize: 13, color: 'var(--mint)' }}>📅 {fmt(m.start_time)}</span>
               {m.host_name && (
                 <span style={{ fontSize: 12.5, color: 'var(--muted)' }}>
-                  Organizator: {m.host_name}
+                  {t('mtOrganizer')} {m.host_name}
                 </span>
               )}
               {m.invitees?.length > 0 && (
                 <span style={{ fontSize: 12.5, color: 'var(--muted)' }}>
-                  {m.invitees.length} invitați
+                  {m.invitees.length} {t('mtInvitees')}
                 </span>
               )}
               <button
                 onClick={() => router.push(`/room/${m.room}?username=${encodeURIComponent(m.host_name || 'Gazdă')}`)}
                 style={{ marginTop: 4 }}
               >
-                Intră în ședință
+                {t('mtEnter')}
               </button>
             </div>
           ))}
       </div>
 
       <div className="foot" style={{ display: 'flex', gap: 18 }}>
-        <Link href="/" style={{ color: 'var(--muted)' }}>← Acasă</Link>
-        <Link href="/schedule" style={{ color: 'var(--muted)' }}>Programează</Link>
+        <Link href="/" style={{ color: 'var(--muted)' }}>{t('navHome')}</Link>
+        <Link href="/schedule" style={{ color: 'var(--muted)' }}>{t('mtSchedule')}</Link>
       </div>
     </div>
   );

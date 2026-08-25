@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import { useRoomContext } from '@livekit/components-react';
 import { RoomEvent } from 'livekit-client';
 import { useTools } from './ToolsProvider';
+import { useT } from './LangProvider';
 
 const LANGS = [
   { code: 'ro', bcp: 'ro-RO', label: '🇷🇴 Română' },
@@ -30,6 +31,7 @@ async function translate(text, source, target) {
 export default function Captions() {
   const room = useRoomContext();
   const { activeTool, setActiveTool } = useTools();
+  const { t } = useT();
   const barOpen = activeTool === 'subtitrare';
 
   const [on, setOn] = useState(false);
@@ -62,14 +64,27 @@ export default function Captions() {
 
   const saveNotes = () => {
     if (!transcriptRef.current.length) return;
-    const header = `Notițe ședință Aula — ${new Date().toLocaleString('ro-RO')}\n\n`;
-    const body = transcriptRef.current.map((e) => `${e.t}  ${e.speaker}: ${e.text}`).join('\n');
-    const blob = new Blob([header + body], { type: 'text/plain;charset=utf-8' });
+    const roomName = room?.name ? ` · ${room.name}` : '';
+    const now = new Date();
+    const sep = '─'.repeat(42);
+    const lines = [
+      `${t('capNotesTitle')}${roomName}`,
+      now.toLocaleString('ro-RO'),
+      sep,
+      '',
+      ...transcriptRef.current.map((e) => `[${e.t}] ${e.speaker}: ${e.text}`),
+      '',
+      sep,
+      `Total: ${transcriptRef.current.length}`,
+    ];
+    const blob = new Blob([lines.join('\n')], { type: 'text/plain;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
+    const stamp = now.toISOString().slice(0, 16).replace(/[:T]/g, '-');
     a.href = url;
-    a.download = `notite-aula-${Date.now()}.txt`;
+    a.download = `notite-aula-${stamp}.txt`;
     a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 4000);
   };
 
   const publish = useCallback((payload) => {
@@ -86,10 +101,17 @@ export default function Captions() {
       if (!data?.text) return;
       const speaker = participant?.name || participant?.identity || 'Cineva';
       const target = showLangRef.current;
-      let text = data.text;
-      if (data.final && data.lang && data.lang !== target) text = await translate(data.text, data.lang, target);
-      showCaption(speaker, text);
-      if (data.final) addTranscript(speaker, text);
+      const needTranslate = data.lang && data.lang !== target;
+      if (data.final) {
+        const text = needTranslate ? await translate(data.text, data.lang, target) : data.text;
+        showCaption(speaker, text);
+        addTranscript(speaker, text);
+      } else if (!needTranslate) {
+        // Interimar în aceeași limbă → îl arătăm live. Dacă ar trebui tradus,
+        // așteptăm varianta finală ca privitorul să vadă DOAR limba lui (nu „fulgerări”
+        // în limba vorbitorului).
+        showCaption(speaker, data.text);
+      }
     };
     room.on(RoomEvent.DataReceived, handler);
     return () => room.off(RoomEvent.DataReceived, handler);
@@ -102,7 +124,7 @@ export default function Captions() {
     }
     const SR = typeof window !== 'undefined' && (window.SpeechRecognition || window.webkitSpeechRecognition);
     if (!SR) {
-      setError('Subtitrarea merge în Chrome sau Edge (nu în Brave/Firefox). Deschide aplicația în Chrome.');
+      setError(t('capErr'));
       setOn(false);
       return;
     }
@@ -130,7 +152,7 @@ export default function Captions() {
         })();
       }
     };
-    rec.onerror = (ev) => { if (ev?.error === 'not-allowed' || ev?.error === 'service-not-allowed') { setError('Permite microfonul și folosește Chrome/Edge pentru subtitrare.'); setOn(false); } };
+    rec.onerror = (ev) => { if (ev?.error === 'not-allowed' || ev?.error === 'service-not-allowed') { setError(t('capMicErr')); setOn(false); } };
     rec.onend = () => { if (onRef.current) { try { rec.start(); } catch (e) {} } };
     try { rec.start(); } catch (e) {}
     recRef.current = rec;
@@ -144,16 +166,16 @@ export default function Captions() {
           <button className={`cc ${on ? 'active' : ''}`} onClick={() => setOn((v) => !v)} title="Pornește/oprește subtitrarea">
             CC {on ? 'ON' : 'OFF'}
           </button>
-          <span className="cap-lbl">Vorbesc:</span>
+          <span className="cap-lbl">{t('capSpeak')}</span>
           <select value={myLang} onChange={(e) => setMyLang(e.target.value)}>
             {LANGS.map((l) => (<option key={l.code} value={l.code}>{l.label}</option>))}
           </select>
-          <span className="cap-lbl">Afișez:</span>
+          <span className="cap-lbl">{t('capShow')}</span>
           <select value={showLang} onChange={(e) => setShowLang(e.target.value)}>
             {LANGS.map((l) => (<option key={l.code} value={l.code}>{l.label}</option>))}
           </select>
           <button className="cap-notes" onClick={saveNotes} disabled={noteCount === 0} title="Descarcă notițele traduse ale ședinței">
-            ⬇ Notițe{noteCount ? ` (${noteCount})` : ''}
+            ⬇ {t('capNotes')}{noteCount ? ` (${noteCount})` : ''}
           </button>
           <button className="cap-close" onClick={() => { setOn(false); setActiveTool(null); }}>✕</button>
         </div>

@@ -1,11 +1,13 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useT } from '../components/LangProvider';
 import Link from 'next/link';
 import { authedFetch } from '../../lib/api';
 import { useAuth } from '../components/AuthProvider';
 
 export default function Schedule() {
+  const { t } = useT();
   const [form, setForm] = useState({
     title: '',
     date: '',
@@ -85,27 +87,27 @@ export default function Schedule() {
             <path d="M16 2v4M8 2v4M3 10h18" />
           </svg>
         </span>
-        Programează o ședință
+        {t('scPageTitle')}
       </div>
-      <p className="tagline">Alege data, invită oamenii pe email, gata.</p>
+      <p className="tagline">{t('scSub')}</p>
 
       {status !== 'done' && (
         <div className="card" style={{ maxWidth: 440 }}>
-          <label>Titlul ședinței</label>
-          <input value={form.title} onChange={upd('title')} placeholder="ex. Ședință de produs" />
+          <label>{t('scTitleL')}</label>
+          <input value={form.title} onChange={upd('title')} placeholder={t('scTitlePh')} />
 
           <div style={{ display: 'flex', gap: 12 }}>
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 6 }}>
-              <label>Data</label>
+              <label>{t('scDate')}</label>
               <input type="date" value={form.date} onChange={upd('date')} />
             </div>
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 6 }}>
-              <label>Ora</label>
+              <label>{t('scTime')}</label>
               <input type="time" value={form.time} onChange={upd('time')} />
             </div>
           </div>
 
-          <label>Durată</label>
+          <label>{t('scDuration')}</label>
           <select
             value={form.duration}
             onChange={upd('duration')}
@@ -119,21 +121,21 @@ export default function Schedule() {
               fontSize: 15,
             }}
           >
-            <option value="15">15 minute</option>
-            <option value="30">30 minute</option>
-            <option value="45">45 minute</option>
-            <option value="60">1 oră</option>
-            <option value="90">1 oră 30 min</option>
-            <option value="120">2 ore</option>
-            <option value="180">3 ore</option>
-            <option value="240">4 ore</option>
-            <option value="480">Toată ziua / fără limită</option>
+            <option value="15">{t('sc15')}</option>
+            <option value="30">{t('sc30')}</option>
+            <option value="45">{t('sc45')}</option>
+            <option value="60">{t('sc60')}</option>
+            <option value="90">{t('sc90')}</option>
+            <option value="120">{t('sc120')}</option>
+            <option value="180">{t('sc180')}</option>
+            <option value="240">{t('sc240')}</option>
+            <option value="480">{t('scAllDay')}</option>
           </select>
 
-          <label>Numele tău (organizator)</label>
+          <label>{t('scHostName')}</label>
           <input value={form.hostName} onChange={upd('hostName')} placeholder="ex. Andrei" />
 
-          <label>Invitați (emailuri, separate prin virgulă)</label>
+          <label>{t('scInvitees')}</label>
           <textarea
             value={form.invitees}
             onChange={upd('invitees')}
@@ -153,7 +155,7 @@ export default function Schedule() {
 
           {contacts.length > 0 && (
             <div style={{ marginTop: -4 }}>
-              <div style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 6 }}>Din contactele tale (clic pentru a adăuga):</div>
+              <div style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 6 }}>{t('scFromContacts')}</div>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, maxHeight: 96, overflowY: 'auto' }}>
                 {contacts.map((c) => (
                   <button
@@ -166,23 +168,23 @@ export default function Schedule() {
                   </button>
                 ))}
               </div>
-              <Link href="/contacte" style={{ fontSize: 12, color: 'var(--accent)', display: 'inline-block', marginTop: 6 }}>Gestionează contactele →</Link>
+              <Link href="/contacte" style={{ fontSize: 12, color: 'var(--accent)', display: 'inline-block', marginTop: 6 }}>{t('scManageContacts')}</Link>
             </div>
           )}
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 2 }}>
             <label style={{ display: 'flex', gap: 9, alignItems: 'flex-start', fontSize: 13, color: 'var(--muted)', fontWeight: 400, cursor: 'pointer' }}>
               <input type="checkbox" checked={form.lobby} onChange={(e) => setForm({ ...form, lobby: e.target.checked })} style={{ marginTop: 2, accentColor: 'var(--accent)' }} />
-              Sală de așteptare (admiți tu fiecare participant — bun la consultații și cursuri cu plată)
+              {t('scLobbyOpt')}
             </label>
             <label style={{ display: 'flex', gap: 9, alignItems: 'flex-start', fontSize: 13, color: 'var(--muted)', fontWeight: 400, cursor: 'pointer' }}>
               <input type="checkbox" checked={form.webinar} onChange={(e) => setForm({ ...form, webinar: e.target.checked })} style={{ marginTop: 2, accentColor: 'var(--accent)' }} />
-              Mod webinar (participanții doar ascultă; doar gazda vorbește)
+              {t('scWebinarOpt')}
             </label>
           </div>
 
           <button onClick={submit} disabled={!canSubmit || status === 'sending'}>
-            {status === 'sending' ? 'Se trimite…' : 'Programează și trimite invitații'}
+            {status === 'sending' ? t('scSubmitting') : t('scSubmit')}
           </button>
 
           {status === 'error' && (
@@ -194,25 +196,39 @@ export default function Schedule() {
       {status === 'done' && result && (
         <div className="card" style={{ maxWidth: 440 }}>
           <h3 style={{ color: 'var(--mint)', fontFamily: 'Space Grotesk' }}>
-            Ședință programată ✓
+            {t('scDoneTitle')}
           </h3>
           <p style={{ fontSize: 14, color: 'var(--muted)' }}>
             {result.emailsSent > 0
-              ? `Am trimis ${result.emailsSent} invitații pe email.`
-              : 'Ședința e creată. (Trimiterea emailurilor necesită configurarea Resend.)'}
+              ? `${t('scSent')} ${result.emailsSent} ${t('scSentInvites')}`
+              : t('scDoneNoResend')}
           </p>
-          <label>Link de intrare</label>
+          <label>{t('scGuestLink')}</label>
           <input readOnly value={result.joinUrl} onClick={(e) => e.target.select()} />
-          <button onClick={copy}>{copied ? 'Copiat ✓' : 'Copiază linkul'}</button>
+          <button onClick={copy}>{copied ? t('scCopied') : t('scCopyGuest')}</button>
+
+          {result.hostUrl && (
+            <>
+              <label style={{ marginTop: 8, color: 'var(--mint)' }}>{t('scHostLink')}</label>
+              <input readOnly value={result.hostUrl} onClick={(e) => e.target.select()} style={{ borderColor: 'var(--mint)' }} />
+              <button
+                style={{ background: 'var(--mint)', color: '#06231c' }}
+                onClick={() => { navigator.clipboard.writeText(result.hostUrl); }}
+              >
+                {t('scCopyHost')}
+              </button>
+              <p style={{ fontSize: 12, color: 'var(--muted)' }}>{t('scHostHint')}</p>
+            </>
+          )}
           <Link href="/meetings" style={{ color: 'var(--accent)', fontSize: 14, textAlign: 'center' }}>
-            Vezi toate ședințele →
+            {t('scSeeAllArrow')}
           </Link>
         </div>
       )}
 
       <div className="foot" style={{ display: 'flex', gap: 18 }}>
-        <Link href="/" style={{ color: 'var(--muted)' }}>← Acasă</Link>
-        <Link href="/meetings" style={{ color: 'var(--muted)' }}>Ședințele mele</Link>
+        <Link href="/" style={{ color: 'var(--muted)' }}>{t('navHome')}</Link>
+        <Link href="/meetings" style={{ color: 'var(--muted)' }}>{t('scSeeAll')}</Link>
       </div>
     </div>
   );
