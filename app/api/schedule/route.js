@@ -7,6 +7,21 @@ import { buildIcs } from '../../../lib/ics';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
+// Adresa publică a aplicației: preferă variabila din setări; altfel o deduce din
+// cererea reală (așa linkul nu mai iese „localhost” dacă ai uitat s-o configurezi).
+function appUrlFrom(req) {
+  const env = (process.env.NEXT_PUBLIC_APP_URL || '').trim().replace(/\/+$/, '');
+  if (env && !/localhost|127\.0\.0\.1/.test(env)) return env;
+  try {
+    const origin = req.headers.get('origin');
+    if (origin) return origin.replace(/\/+$/, '');
+    const host = req.headers.get('x-forwarded-host') || req.headers.get('host');
+    const proto = req.headers.get('x-forwarded-proto') || 'https';
+    if (host) return `${proto}://${host}`;
+  } catch (e) {}
+  return env || 'http://localhost:3000';
+}
+
 function slugify(text) {
   return (
     (text || 'sedinta')
@@ -48,7 +63,7 @@ export async function POST(req) {
 
   const room = `${slugify(title)}-${Math.random().toString(36).slice(2, 6)}`;
   const hostKey = Math.random().toString(36).slice(2, 10);
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+  const appUrl = appUrlFrom(req);
   const joinUrl = `${appUrl}/room/${room}`;
   const hostUrl = `${appUrl}/room/${room}?host=${hostKey}`;
   const uid = `${room}@aula`;

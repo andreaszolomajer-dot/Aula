@@ -64,14 +64,27 @@ export default function Captions() {
 
   const saveNotes = () => {
     if (!transcriptRef.current.length) return;
-    const header = `${t('capNotesTitle')} — ${new Date().toLocaleString('ro-RO')}\n\n`;
-    const body = transcriptRef.current.map((e) => `${e.t}  ${e.speaker}: ${e.text}`).join('\n');
-    const blob = new Blob([header + body], { type: 'text/plain;charset=utf-8' });
+    const roomName = room?.name ? ` · ${room.name}` : '';
+    const now = new Date();
+    const sep = '─'.repeat(42);
+    const lines = [
+      `${t('capNotesTitle')}${roomName}`,
+      now.toLocaleString('ro-RO'),
+      sep,
+      '',
+      ...transcriptRef.current.map((e) => `[${e.t}] ${e.speaker}: ${e.text}`),
+      '',
+      sep,
+      `Total: ${transcriptRef.current.length}`,
+    ];
+    const blob = new Blob([lines.join('\n')], { type: 'text/plain;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
+    const stamp = now.toISOString().slice(0, 16).replace(/[:T]/g, '-');
     a.href = url;
-    a.download = `notite-aula-${Date.now()}.txt`;
+    a.download = `notite-aula-${stamp}.txt`;
     a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 4000);
   };
 
   const publish = useCallback((payload) => {
@@ -88,10 +101,17 @@ export default function Captions() {
       if (!data?.text) return;
       const speaker = participant?.name || participant?.identity || 'Cineva';
       const target = showLangRef.current;
-      let text = data.text;
-      if (data.final && data.lang && data.lang !== target) text = await translate(data.text, data.lang, target);
-      showCaption(speaker, text);
-      if (data.final) addTranscript(speaker, text);
+      const needTranslate = data.lang && data.lang !== target;
+      if (data.final) {
+        const text = needTranslate ? await translate(data.text, data.lang, target) : data.text;
+        showCaption(speaker, text);
+        addTranscript(speaker, text);
+      } else if (!needTranslate) {
+        // Interimar în aceeași limbă → îl arătăm live. Dacă ar trebui tradus,
+        // așteptăm varianta finală ca privitorul să vadă DOAR limba lui (nu „fulgerări”
+        // în limba vorbitorului).
+        showCaption(speaker, data.text);
+      }
     };
     room.on(RoomEvent.DataReceived, handler);
     return () => room.off(RoomEvent.DataReceived, handler);
