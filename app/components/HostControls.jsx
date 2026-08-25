@@ -118,6 +118,7 @@ export default function HostControls() {
           <div className="hc-list">
             <div className="hc-sub">{t('hcParticipants')}</div>
             {others.length === 0 && <p className="hc-muted">{t('hcNoOthers')}</p>}
+            {amHost && others.length === 0 && <p className="hc-muted" style={{ fontSize: 11.5 }}>{t('hcCoHint')}</p>}
             {others.map((p) => {
               const isCo = cohosts.includes(p.identity);
               return (

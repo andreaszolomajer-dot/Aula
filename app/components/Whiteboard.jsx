@@ -11,6 +11,7 @@ const dec = new TextDecoder();
 const BOARD_BG = '#FFFFFF';
 const COLORS = ['#1B2330', '#F2555A', '#2F6BFF', '#1FA97A', '#F5A742', '#8B5CF6'];
 const SIZES = [2, 4, 8];
+const clamp01 = (v) => Math.min(1, Math.max(0, v));
 
 export default function Whiteboard() {
   const room = useRoomContext();
@@ -20,7 +21,8 @@ export default function Whiteboard() {
 
   const [color, setColor] = useState('#1B2330');
   const [size, setSize] = useState(4);
-  const [tool, setTool] = useState('pen'); // 'pen' | 'eraser' | 'text'
+  const [tool, setTool] = useState('pen'); // 'pen' | 'eraser' | 'text' | 'circle' | 'square' | 'triangle'
+  const [fill, setFill] = useState(false);
   const [textInput, setTextInput] = useState(null); // {nx, ny, left, top}
   const [textVal, setTextVal] = useState('');
 
@@ -29,8 +31,9 @@ export default function Whiteboard() {
   const textInputRef = useRef(null);
   const itemsRef = useRef([]); // {kind:'stroke'|'text', ...}
   const drawingId = useRef(null);
-  const toolRef = useRef({ color, size, tool });
-  toolRef.current = { color, size, tool };
+  const shapeDraft = useRef(null);
+  const toolRef = useRef({ color, size, tool, fill });
+  toolRef.current = { color, size, tool, fill };
 
   const publish = useCallback(
     (msg) => {
@@ -65,6 +68,29 @@ export default function Whiteboard() {
     ctx.fillText(item.text, item.x * c.width, item.y * c.height);
   };
 
+  const drawShape = (item) => {
+    const c = canvasRef.current; if (!c) return;
+    const ctx = c.getContext('2d');
+    const x = item.x * c.width, y = item.y * c.height;
+    const w = item.w * c.width, h = item.h * c.height;
+    ctx.lineWidth = Math.max(1, item.size);
+    ctx.strokeStyle = item.color;
+    ctx.fillStyle = item.color;
+    ctx.lineJoin = 'round';
+    ctx.beginPath();
+    if (item.shapeType === 'circle') {
+      ctx.ellipse(x + w / 2, y + h / 2, Math.abs(w / 2), Math.abs(h / 2), 0, 0, Math.PI * 2);
+    } else if (item.shapeType === 'square') {
+      ctx.rect(x, y, w, h);
+    } else if (item.shapeType === 'triangle') {
+      ctx.moveTo(x + w / 2, y);
+      ctx.lineTo(x + w, y + h);
+      ctx.lineTo(x, y + h);
+      ctx.closePath();
+    }
+    if (item.fill) ctx.fill(); else ctx.stroke();
+  };
+
   const redraw = useCallback(() => {
     const c = canvasRef.current; if (!c) return;
     const ctx = c.getContext('2d');
@@ -72,6 +98,7 @@ export default function Whiteboard() {
     ctx.fillRect(0, 0, c.width, c.height);
     for (const it of itemsRef.current) {
       if (it.kind === 'text') drawText(it);
+      else if (it.kind === 'shape') drawShape(it);
       else for (let i = 1; i < it.pts.length; i++) drawSeg(it, it.pts[i - 1], it.pts[i]);
     }
   }, []);
@@ -101,6 +128,10 @@ export default function Whiteboard() {
         const it = { kind: 'text', id: m.id, color: m.color, size: m.size, x: m.x, y: m.y, text: m.text };
         itemsRef.current.push(it);
         if (open) drawText(it);
+      } else if (m.t === 'shape') {
+        const it = { kind: 'shape', id: m.id, shapeType: m.shapeType, color: m.color, size: m.size, fill: m.fill, x: m.x, y: m.y, w: m.w, h: m.h };
+        itemsRef.current.push(it);
+        if (open) drawShape(it);
       } else if (m.t === 'clear') {
         itemsRef.current = []; if (open) redraw();
       } else if (m.t === 'req') {
@@ -148,6 +179,12 @@ export default function Whiteboard() {
       return;
     }
     const p = norm(e);
+    const tc = toolRef.current;
+    if (tc.tool === 'circle' || tc.tool === 'square' || tc.tool === 'triangle') {
+      shapeDraft.current = { shapeType: tc.tool, color: tc.color, size: tc.size, fill: tc.fill, x0: p.x, y0: p.y, x1: p.x, y1: p.y };
+      e.currentTarget.setPointerCapture?.(e.pointerId);
+      return;
+    }
     const id = Math.random().toString(36).slice(2);
     drawingId.current = id;
     const t = toolRef.current;
@@ -156,6 +193,14 @@ export default function Whiteboard() {
     e.currentTarget.setPointerCapture?.(e.pointerId);
   };
   const onMove = (e) => {
+    if (shapeDraft.current) {
+      const p = norm(e);
+      const d = shapeDraft.current;
+      d.x1 = p.x; d.y1 = p.y;
+      redraw();
+      drawShape({ shapeType: d.shapeType, color: d.color, size: d.size, fill: d.fill, x: Math.min(d.x0, d.x1), y: Math.min(d.y0, d.y1), w: Math.abs(d.x1 - d.x0), h: Math.abs(d.y1 - d.y0) });
+      return;
+    }
     if (!drawingId.current) return;
     const s = getStroke(drawingId.current);
     if (!s) return;
@@ -165,7 +210,26 @@ export default function Whiteboard() {
     s.pts.push({ x: p.x, y: p.y });
     publish({ t: 'point', id: s.id, x: p.x, y: p.y });
   };
-  const onUp = () => { drawingId.current = null; };
+  const onUp = () => {
+    if (shapeDraft.current) {
+      const d = shapeDraft.current;
+      shapeDraft.current = null;
+      let x = Math.min(d.x0, d.x1), y = Math.min(d.y0, d.y1);
+      let w = Math.abs(d.x1 - d.x0), h = Math.abs(d.y1 - d.y0);
+      if (w < 0.01 && h < 0.01) {
+        // click simplu → formă gata făcută, mărime standard, centrată pe click
+        const dw = 0.05, dh = 0.06;
+        x = clamp01(d.x0 - dw / 2); y = clamp01(d.y0 - dh / 2); w = dw; h = dh;
+      }
+      const id = Math.random().toString(36).slice(2);
+      const it = { kind: 'shape', id, shapeType: d.shapeType, color: d.color, size: d.size, fill: d.fill, x, y, w, h };
+      itemsRef.current.push(it);
+      redraw();
+      publish({ t: 'shape', id, shapeType: d.shapeType, color: d.color, size: d.size, fill: d.fill, x, y, w, h });
+      return;
+    }
+    drawingId.current = null;
+  };
 
   const commitText = () => {
     const v = textVal.trim();
@@ -199,6 +263,12 @@ export default function Whiteboard() {
         <button className={`wb-tool ${tool === 'pen' ? 'on' : ''}`} onClick={() => setTool('pen')}>{t('wbDraw')}</button>
         <button className={`wb-tool ${tool === 'text' ? 'on' : ''}`} onClick={() => setTool('text')}>{t('wbText')}</button>
         <button className={`wb-tool ${tool === 'eraser' ? 'on' : ''}`} onClick={() => setTool('eraser')}>{t('wbEraser')}</button>
+        <span className="wb-div" />
+        <button className={`wb-tool ${tool === 'circle' ? 'on' : ''}`} onClick={() => setTool('circle')}>{t('wbCircle')}</button>
+        <button className={`wb-tool ${tool === 'square' ? 'on' : ''}`} onClick={() => setTool('square')}>{t('wbSquare')}</button>
+        <button className={`wb-tool ${tool === 'triangle' ? 'on' : ''}`} onClick={() => setTool('triangle')}>{t('wbTriangle')}</button>
+        <button className={`wb-tool ${fill ? 'on' : ''}`} onClick={() => setFill((v) => !v)}>{t('wbFill')}</button>
+        <span className="wb-div" />
         <button className="wb-tool" onClick={clearBoard}>{t('wbClear')}</button>
         <button className="wb-tool close" onClick={() => setActiveTool(null)}>{t('wbClose')}</button>
       </div>

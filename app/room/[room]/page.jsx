@@ -15,6 +15,7 @@ import HostControls from '../../components/HostControls';
 import FileShare from '../../components/FileShare';
 import QA from '../../components/QA';
 import YouTubeVideo from '../../components/YouTubeVideo';
+import CopyInvite from '../../components/CopyInvite';
 import Dock from '../../components/Dock';
 import { ToolsProvider } from '../../components/ToolsProvider';
 import { useT } from '../../components/LangProvider';
@@ -107,6 +108,7 @@ export default function Room() {
       >
         <ToolsProvider>
           <VideoConference />
+          <CopyInvite />
           <RoomNotice />
           <Dock />
           <Captions />
