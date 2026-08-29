@@ -113,7 +113,7 @@ export default function YouTubeVideo() {
       const p = playerRef.current;
       if (!p || !p.seekTo) return;
       try {
-        if (typeof time === 'number' && Math.abs(p.getCurrentTime() - time) > 1.2) p.seekTo(time, true);
+        if (typeof time === 'number' && Math.abs(p.getCurrentTime() - time) > 2.2) p.seekTo(time, true);
         if (play) p.playVideo(); else p.pauseVideo();
       } catch (e) {}
     };

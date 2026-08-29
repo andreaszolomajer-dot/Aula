@@ -65,7 +65,9 @@ async function viaGoogle(q, source, target) {
 // --- MyMemory (ultima soluție, gratuit) ---
 async function viaMyMemory(q, source, target) {
   const langpair = `${source && source !== 'auto' ? source : 'en'}|${target}`;
-  const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(q)}&langpair=${encodeURIComponent(langpair)}`;
+  const email = (process.env.MYMEMORY_EMAIL || '').trim();
+  let url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(q)}&langpair=${encodeURIComponent(langpair)}`;
+  if (email) url += `&de=${encodeURIComponent(email)}`; // email valid → ~50.000 cuvinte/zi în loc de ~5.000
   const r = await fetch(url);
   const d = await r.json();
   return d?.responseData?.translatedText || '';

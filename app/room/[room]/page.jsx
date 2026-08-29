@@ -104,6 +104,10 @@ export default function Room() {
         video={canPub}
         audio={canPub}
         onDisconnected={() => router.push('/')}
+        options={{
+          audioCaptureDefaults: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
+          publishDefaults: { red: true, dtx: true },
+        }}
         style={{ height: '100%' }}
       >
         <ToolsProvider>

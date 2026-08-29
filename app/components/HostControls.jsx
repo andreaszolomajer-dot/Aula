@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useRoomContext, useLocalParticipant, useParticipants } from '@livekit/components-react';
+import { useSearchParams } from 'next/navigation';
 import { useTools } from './ToolsProvider';
 import { useT } from './LangProvider';
 
@@ -9,6 +10,7 @@ export default function HostControls() {
   const room = useRoomContext();
   const { localParticipant } = useLocalParticipant();
   const participants = useParticipants();
+  const search = useSearchParams();
   const { activeTool, setActiveTool } = useTools();
   const { t } = useT();
   const open = activeTool === 'gazda';
@@ -16,6 +18,7 @@ export default function HostControls() {
   const roomName = room?.name || '';
   const myId = localParticipant?.identity || '';
   const myName = localParticipant?.name || 'Gazdă';
+  const hostKey = search?.get('host') || '';
 
   const [amHost, setAmHost] = useState(false);
   const [amCohost, setAmCohost] = useState(false);
@@ -27,10 +30,10 @@ export default function HostControls() {
 
   const post = useCallback(async (action, extra = {}) => {
     try {
-      const res = await fetch('/api/host', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ room: roomName, identity: myId, name: myName, action, ...extra }) });
+      const res = await fetch('/api/host', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ room: roomName, identity: myId, name: myName, hostKey, action, ...extra }) });
       return await res.json();
     } catch (e) { return { error: 'Eroare de rețea.' }; }
-  }, [roomName, myId, myName]);
+  }, [roomName, myId, myName, hostKey]);
 
   const refreshStatus = useCallback(async () => {
     const d = await post('status');
